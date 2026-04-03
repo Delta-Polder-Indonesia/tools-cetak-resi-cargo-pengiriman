@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
@@ -17,6 +17,7 @@ import {
   type OrderItem,
   type PrintMode,
   TEMPLATE_COLOR,
+  createCargoId,
   getDefaultSnapshot,
   normalizeSnapshot,
 } from "./models/formSnapshot";
@@ -40,6 +41,9 @@ export default function App() {
   const [isExporting, setIsExporting] = useState(false);
   const [activeStep, setActiveStep] = useState(1);
   const [isHydrated, setIsHydrated] = useState(false);
+  
+  // Ref untuk tracking apakah cargoId sudah di-generate untuk invoice ini
+  const cargoIdMapRef = useRef<Map<string, string>>(new Map());
 
   useEffect(() => {
     setSnapshot(loadInitialSnapshot());
@@ -57,17 +61,22 @@ export default function App() {
     persistHistory(history);
   }, [history, isHydrated]);
 
+  // Effect untuk sync print scale - dengan dependencies yang lengkap
   useEffect(() => {
     if (!isHydrated) return;
+    
     const raf = window.requestAnimationFrame(() => {
       syncPrintScale(snapshot.printMode, snapshot.cargoType !== "REGULER");
     });
+    
     return () => window.cancelAnimationFrame(raf);
   }, [
     isHydrated,
     snapshot.printMode,
     snapshot.cargoType,
-    snapshot.items,
+    // Tambahkan semua field yang mempengaruhi ukuran print area
+    snapshot.items.length,
+    snapshot.items.map(i => `${i.name}-${i.qty}-${i.price}`).join(','),
     snapshot.itemWeightGr,
     snapshot.dimensions.length,
     snapshot.dimensions.width,
@@ -75,6 +84,8 @@ export default function App() {
     snapshot.packageNote,
     snapshot.buyerAddress,
     snapshot.storeAddress,
+    snapshot.showQr,
+    snapshot.isCargoShipment,
   ]);
 
   const {
@@ -107,10 +118,22 @@ export default function App() {
   }, [chargeableWeight, isCargoShipment]);
   const grandTotal = subtotal + effectiveShippingCost + cargoHandlingFee;
   const barcodePayload = useMemo(() => receiptNo || "-", [receiptNo]);
+  
+  // Fixed: Cargo ID yang persist per invoice menggunakan Map
   const cargoIdPayload = useMemo(() => {
-    const rand = Math.random().toString(36).slice(2, 7).toUpperCase();
-    return `CGO-${invoiceNo}-${rand}`;
-  }, [invoiceNo]);
+    if (!isCargoShipment) return "";
+    
+    // Check apakah sudah ada cargoId untuk invoice ini
+    const existingId = cargoIdMapRef.current.get(invoiceNo);
+    if (existingId) {
+      return existingId;
+    }
+    
+    // Generate baru dan simpan
+    const newId = createCargoId(invoiceNo);
+    cargoIdMapRef.current.set(invoiceNo, newId);
+    return newId;
+  }, [invoiceNo, isCargoShipment]);
 
   const filteredHistory = useMemo(() => {
     const keyword = historyQuery.trim().toLowerCase();
@@ -138,11 +161,11 @@ export default function App() {
           ? "max-w-[380px]"
           : "max-w-[420px]";
 
-  const updateField = <K extends keyof FormSnapshot>(key: K, value: FormSnapshot[K]) => {
+  const updateField = useCallback(<K extends keyof FormSnapshot>(key: K, value: FormSnapshot[K]) => {
     setSnapshot((prev) => ({ ...prev, [key]: value }));
-  };
+  }, []);
 
-  const updateItem = (id: string, key: keyof OrderItem, value: string) => {
+  const updateItem = useCallback((id: string, key: keyof OrderItem, value: string) => {
     setSnapshot((prev) => ({
       ...prev,
       items: prev.items.map((item) => {
@@ -153,9 +176,9 @@ export default function App() {
         return { ...item, [key]: value };
       }),
     }));
-  };
+  }, []);
 
-  const updateDimension = (key: keyof Dimensions, value: string) => {
+  const updateDimension = useCallback((key: keyof Dimensions, value: string) => {
     setSnapshot((prev) => ({
       ...prev,
       dimensions: {
@@ -163,29 +186,34 @@ export default function App() {
         [key]: Math.max(0, Number(value) || 0),
       },
     }));
-  };
+  }, []);
 
-  const addItem = () => {
+  const addItem = useCallback(() => {
     setSnapshot((prev) => ({
       ...prev,
-      items: [...prev.items, { id: `${Date.now()}`, name: "", qty: 1, price: 0 }],
+      items: [...prev.items, { 
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 5)}`, 
+        name: "", 
+        qty: 1, 
+        price: 0 
+      }],
     }));
-  };
+  }, []);
 
-  const removeItem = (id: string) => {
+  const removeItem = useCallback((id: string) => {
     setSnapshot((prev) => ({
       ...prev,
       items: prev.items.length > 1 ? prev.items.filter((item) => item.id !== id) : prev.items,
     }));
-  };
+  }, []);
 
-  const handlePrint = (mode: PrintMode = printMode) => {
+  const handlePrint = useCallback((mode: PrintMode = printMode) => {
     syncPrintScale(mode, isCargoShipment);
     applyPrintPageSize(mode, isCargoShipment);
     window.print();
-  };
+  }, [printMode, isCargoShipment]);
 
-  const handleDownloadPdf = async (options?: {
+  const handleDownloadPdf = useCallback(async (options?: {
     mode?: PrintMode;
     invoice?: string;
     receipt?: string;
@@ -205,13 +233,23 @@ export default function App() {
 
     try {
       setIsExporting(true);
-      const canvas = await html2canvas(target, { scale: 2, backgroundColor: "#ffffff" });
+      const canvas = await html2canvas(target, { 
+        scale: 2, 
+        backgroundColor: "#ffffff",
+        useCORS: true,
+        allowTaint: true,
+      });
       const imgData = canvas.toDataURL("image/png");
 
       if (activeMode === "THERMAL_58" || activeMode === "THERMAL_80") {
         const widthMm = getThermalWidth(activeMode);
         const heightMm = (canvas.height * widthMm) / canvas.width + 8;
-        const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: [widthMm, heightMm] });
+        const pdf = new jsPDF({ 
+          orientation: "portrait", 
+          unit: "mm", 
+          format: [widthMm, heightMm],
+          compress: true,
+        });
         if (isCargoPdf) {
           pdf.setProperties({
             author: "UMKM Cargo System",
@@ -224,11 +262,16 @@ export default function App() {
       } else {
         const isAuto = activeMode === "AUTO";
         const isA4 = activeMode === "A4" || isAuto;
-        const pageFormat = isA4 ? (isCargoPdf && !isAuto ? [100, 150] : "a4") : activeMode === "LABEL_100X100" ? [100, 100] : [100, 150];
+        const pageFormat = isA4 
+          ? (isCargoPdf && !isAuto ? [100, 150] : "a4") 
+          : activeMode === "LABEL_100X100" 
+            ? [100, 100] 
+            : [100, 150];
         const pdf = new jsPDF({
           orientation: "portrait",
           unit: "mm",
           format: pageFormat,
+          compress: true,
         });
         if (isCargoPdf) {
           pdf.setProperties({
@@ -248,19 +291,22 @@ export default function App() {
         pdf.addImage(imgData, "PNG", x, topPadding, width, height);
         pdf.save(pdfFileName);
       }
+    } catch (error) {
+      console.error("PDF generation failed:", error);
+      alert("Gagal membuat PDF. Silakan coba lagi.");
     } finally {
       setIsExporting(false);
     }
-  };
+  }, [printMode, invoiceNo, receiptNo, cargoType]);
 
-  const exportCargoManifest = () => {
+  const exportCargoManifest = useCallback(() => {
     const cargoEntries = history.filter((entry) => entry.snapshot.cargoType !== "REGULER");
     if (cargoEntries.length === 0) {
       window.alert("Belum ada transaksi cargo di riwayat.");
       return;
     }
 
-    const csvHeader = ["invoiceNo", "cargoType", "chargeableWeight", "dimensions", "courier", "status"];
+    const csvHeader = ["invoiceNo", "cargoType", "chargeableWeight", "dimensions", "courier", "status", "createdAt"];
     const csvRows = cargoEntries.map((entry) => {
       const weight = getChargeableWeight(entry.snapshot.itemWeightGr, entry.snapshot.dimensions);
       const dimensionsText = `${entry.snapshot.dimensions.length}x${entry.snapshot.dimensions.width}x${entry.snapshot.dimensions.height}`;
@@ -271,46 +317,78 @@ export default function App() {
         dimensionsText,
         entry.snapshot.courier,
         entry.snapshot.status,
+        new Date(entry.createdAt).toISOString(),
       ];
     });
 
-    const escapeCsvCell = (value: string) => `"${value.replace(/"/g, '""')}"`;
+    const escapeCsvCell = (value: string) => {
+      const str = String(value).replace(/"/g, '""');
+      return `"${str}"`;
+    };
+    
     const csvContent = [csvHeader, ...csvRows]
       .map((row) => row.map((cell) => escapeCsvCell(String(cell))).join(","))
       .join("\n");
 
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const blob = new Blob(["\ufeff" + csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = "cargo-manifest.csv";
+    link.download = `cargo-manifest-${new Date().toISOString().slice(0, 10)}.csv`;
     document.body.appendChild(link);
     link.click();
     link.remove();
     URL.revokeObjectURL(url);
-  };
+  }, [history]);
 
-  const handleLogoUpload = (file: File | null) => {
+  const handleLogoUpload = useCallback((file: File | null) => {
     if (!file) return;
+    
+    // Validasi file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      alert("Ukuran file terlalu besar. Maksimal 2MB.");
+      return;
+    }
+    
+    // Validasi file type
+    if (!file.type.startsWith("image/")) {
+      alert("File harus berupa gambar.");
+      return;
+    }
+    
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === "string") {
         updateField("logoDataUrl", reader.result);
       }
     };
+    reader.onerror = () => {
+      alert("Gagal membaca file. Silakan coba lagi.");
+    };
     reader.readAsDataURL(file);
-  };
+  }, [updateField]);
 
-  const applyTemplate = (template: BrandingTemplate) => {
+  const applyTemplate = useCallback((template: BrandingTemplate) => {
     updateField("brandingTemplate", template);
     updateField("primaryColor", TEMPLATE_COLOR[template].color);
-  };
+  }, [updateField]);
 
-  const resetData = () => {
-    setSnapshot(getDefaultSnapshot());
-  };
+  const resetData = useCallback(() => {
+    // Konfirmasi sebelum reset
+    if (window.confirm("Apakah Anda yakin ingin mereset semua data? Data yang belum disimpan akan hilang.")) {
+      // Keep nomor invoice dan resi yang ada
+      const currentInvoice = snapshot.invoiceNo;
+      const currentReceipt = snapshot.receiptNo;
+      
+      setSnapshot({
+        ...getDefaultSnapshot(),
+        invoiceNo: currentInvoice,
+        receiptNo: currentReceipt,
+      });
+    }
+  }, [snapshot.invoiceNo, snapshot.receiptNo]);
 
-  const saveToHistory = () => {
+  const saveToHistory = useCallback(() => {
     const cargoIssues = validateCargo(snapshot);
     if (cargoIssues.length > 0) {
       window.alert(`Data cargo belum valid:\n- ${cargoIssues.join("\n- ")}`);
@@ -318,6 +396,15 @@ export default function App() {
     }
 
     const recordId = `${snapshot.invoiceNo}-${snapshot.receiptNo}`;
+    
+    // Check for duplicate
+    const isDuplicate = history.some(entry => entry.id === recordId);
+    if (isDuplicate) {
+      if (!window.confirm("Transaksi dengan nomor ini sudah ada. Apakah Anda ingin memperbarui data yang ada?")) {
+        return;
+      }
+    }
+
     const record: TransactionRecord = {
       id: recordId,
       createdAt: new Date().toISOString(),
@@ -326,39 +413,47 @@ export default function App() {
 
     setHistory((prev) => {
       const withoutCurrent = prev.filter((entry) => entry.id !== recordId);
-      return [record, ...withoutCurrent];
+      return [record, ...withoutCurrent].slice(0, 100); // Limit to 100 entries
     });
-  };
+    
+    // Show success feedback
+    alert("Transaksi berhasil disimpan ke riwayat!");
+  }, [snapshot, history]);
 
-  const loadFromHistory = (record: TransactionRecord) => {
+  const loadFromHistory = useCallback((record: TransactionRecord) => {
     setSnapshot(normalizeSnapshot(record.snapshot));
-  };
+    setActiveStep(1); // Reset ke step 1 setelah load
+  }, []);
 
-  const runAfterLoad = (record: TransactionRecord, action: "print" | "pdf") => {
+  const runAfterLoad = useCallback((record: TransactionRecord, action: "print" | "pdf") => {
     setSnapshot(normalizeSnapshot(record.snapshot));
     window.setTimeout(() => {
       if (action === "print") {
         handlePrint(record.snapshot.printMode);
-        return;
+      } else {
+        handleDownloadPdf({
+          mode: record.snapshot.printMode,
+          invoice: record.snapshot.invoiceNo,
+          receipt: record.snapshot.receiptNo,
+          cargoType: record.snapshot.cargoType,
+        });
       }
-      handleDownloadPdf({
-        mode: record.snapshot.printMode,
-        invoice: record.snapshot.invoiceNo,
-        receipt: record.snapshot.receiptNo,
-        cargoType: record.snapshot.cargoType,
-      });
-    }, 180);
-  };
+    }, 250); // Increased delay untuk ensure render selesai
+  }, [handlePrint, handleDownloadPdf]);
 
-  const deleteHistoryItem = (id: string) => {
-    setHistory((prev) => prev.filter((entry) => entry.id !== id));
-  };
+  const deleteHistoryItem = useCallback((id: string) => {
+    if (window.confirm("Apakah Anda yakin ingin menghapus item ini dari riwayat?")) {
+      setHistory((prev) => prev.filter((entry) => entry.id !== id));
+    }
+  }, []);
 
-  const clearHistory = () => {
-    setHistory([]);
-  };
+  const clearHistory = useCallback(() => {
+    if (window.confirm("Apakah Anda yakin ingin menghapus SEMUA riwayat? Tindakan ini tidak dapat dibatalkan.")) {
+      setHistory([]);
+    }
+  }, []);
 
-  const issueDate = new Date().toLocaleDateString("id-ID");
+  const issueDate = useMemo(() => new Date().toLocaleDateString("id-ID"), []);
 
   return (
     <main className="min-h-screen bg-slate-100 text-slate-900">
