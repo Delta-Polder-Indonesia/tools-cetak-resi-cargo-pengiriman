@@ -4,6 +4,10 @@ import type { FormSnapshot } from "../models/formSnapshot";
 import { formatCurrency } from "../utils/format";
 import { formatWeight } from "../utils/weight";
 
+// =============================================================================
+// TYPES
+// =============================================================================
+
 type PrintPreviewProps = {
   snapshot: FormSnapshot;
   issueDate: string;
@@ -19,16 +23,21 @@ type PrintPreviewProps = {
   volumetricWeight: number;
 };
 
-// Fragile Stamp Component - Desain seperti stempel/stiker di foto
+// =============================================================================
+// SUB-COMPONENTS: Handling Stamps
+// =============================================================================
+
+/**
+ * Fragile Stamp Component
+ * Desain stempel "Mudah Pecah" dengan ikon gelas pecah
+ */
 const FragileStamp = () => (
   <div className="relative overflow-hidden border-2 border-red-600 bg-red-600 text-white">
-    {/* Layout utama stiker */}
     <div className="flex">
-      {/* Bagian kiri - Ikon gelas pecah */}
+      {/* Bagian Kiri - Ikon Gelas Pecah */}
       <div className="flex w-1/3 flex-col items-center justify-center border-r-2 border-white p-3">
-        {/* Ikon gelas pecah */}
-        <svg 
-          viewBox="0 0 100 140" 
+        <svg
+          viewBox="0 0 100 140"
           className="h-20 w-16 fill-white"
           xmlns="http://www.w3.org/2000/svg"
         >
@@ -39,29 +48,31 @@ const FragileStamp = () => (
           <path d="M48 65 L52 75 L45 85" stroke="red" strokeWidth="2" fill="none" />
         </svg>
         <p className="mt-2 text-center text-xs font-black leading-tight">
-          FRAGILE<br/>DO NOT DROP
+          FRAGILE
+          <br />
+          DO NOT DROP
         </p>
       </div>
-      
-      {/* Bagian kanan - Teks dan simbol */}
+
+      {/* Bagian Kanan - Teks dan Simbol Handling */}
       <div className="w-2/3 p-2">
-        {/* Teks utama */}
+        {/* Teks Utama */}
         <div className="mb-2 border-b-2 border-white pb-2 text-center">
           <p className="text-xl font-black tracking-wider">HATI-HATI</p>
           <p className="text-lg font-black">MUDAH PECAH</p>
         </div>
-        
-        {/* Simbol handling */}
+
+        {/* Simbol Handling */}
         <div className="grid grid-cols-3 gap-1">
-          {/* Panah ke atas */}
+          {/* Panah Ke Atas */}
           <div className="flex flex-col items-center justify-center border border-white p-1">
             <svg viewBox="0 0 40 50" className="h-8 w-6 fill-white">
               <path d="M20 5 L10 20 L16 20 L16 45 L24 45 L24 20 L30 20 Z" />
             </svg>
             <p className="mt-1 text-[8px] font-bold">THIS WAY UP</p>
           </div>
-          
-          {/* Tangan memegang */}
+
+          {/* Tangan Memegang */}
           <div className="flex flex-col items-center justify-center border border-white p-1">
             <svg viewBox="0 0 50 40" className="h-8 w-8 fill-white">
               <path d="M25 5 Q15 5 15 15 L15 25 Q15 30 20 30 L20 35 L30 35 L30 30 Q35 30 35 25 L35 15 Q35 5 25 5 Z" />
@@ -70,8 +81,8 @@ const FragileStamp = () => (
             </svg>
             <p className="mt-1 text-[8px] font-bold">HANDLE WITH CARE</p>
           </div>
-          
-          {/* Payung/tidak basah */}
+
+          {/* Payung / Keep Dry */}
           <div className="flex flex-col items-center justify-center border border-white p-1">
             <svg viewBox="0 0 50 40" className="h-8 w-8 fill-white">
               <path d="M25 5 Q5 15 5 25 L8 25 Q8 18 25 12 Q42 18 42 25 L45 25 Q45 15 25 5 Z" />
@@ -85,7 +96,7 @@ const FragileStamp = () => (
             <p className="mt-1 text-[8px] font-bold">KEEP DRY</p>
           </div>
         </div>
-        
+
         {/* Footer */}
         <div className="mt-2 text-center">
           <p className="text-sm font-black tracking-wider">HANDLE WITH CARE</p>
@@ -95,22 +106,23 @@ const FragileStamp = () => (
   </div>
 );
 
-// Temperature Controlled Stamp
+/**
+ * Temperature Controlled Stamp Component
+ * Stempel untuk barang yang memerlukan kontrol suhu
+ */
 const TemperatureStamp = () => (
   <div className="relative overflow-hidden border-2 border-blue-600 bg-blue-600 text-white">
     <div className="flex">
       <div className="flex w-1/3 flex-col items-center justify-center border-r-2 border-white p-3">
         <span className="text-4xl">❄️</span>
-        <p className="mt-2 text-center text-xs font-black">
-          KEEP COOL
-        </p>
+        <p className="mt-2 text-center text-xs font-black">KEEP COOL</p>
       </div>
       <div className="w-2/3 p-3">
         <div className="text-center">
           <p className="text-lg font-black">SUHU TERKONTROL</p>
           <p className="text-sm font-bold">TEMPERATURE CONTROLLED</p>
         </div>
-        <div className="mt-2 text-center border-t border-white pt-2">
+        <div className="mt-2 border-t border-white pt-2 text-center">
           <p className="text-xs">Jangan dibekukan / Do not freeze</p>
           <p className="text-xs">Suhu: 2°C - 8°C</p>
         </div>
@@ -119,22 +131,23 @@ const TemperatureStamp = () => (
   </div>
 );
 
-// Dangerous Goods Stamp
+/**
+ * Dangerous Goods Stamp Component
+ * Stempel untuk barang berbahaya
+ */
 const DangerousStamp = () => (
   <div className="relative overflow-hidden border-2 border-red-800 bg-red-800 text-white">
     <div className="flex">
       <div className="flex w-1/3 flex-col items-center justify-center border-r-2 border-white p-3">
         <span className="text-4xl">☠️</span>
-        <p className="mt-2 text-center text-xs font-black">
-          DANGEROUS
-        </p>
+        <p className="mt-2 text-center text-xs font-black">DANGEROUS</p>
       </div>
       <div className="w-2/3 p-3">
         <div className="text-center">
           <p className="text-lg font-black">BAHAN BERBAHAYA</p>
           <p className="text-sm font-bold">DANGEROUS GOODS</p>
         </div>
-        <div className="mt-2 text-center border-t border-white pt-2">
+        <div className="mt-2 border-t border-white pt-2 text-center">
           <p className="text-xs font-bold">HANDLE WITH EXTREME CARE</p>
           <p className="text-xs">Follow safety protocols</p>
         </div>
@@ -142,6 +155,60 @@ const DangerousStamp = () => (
     </div>
   </div>
 );
+
+// =============================================================================
+// UTILITY FUNCTIONS
+// =============================================================================
+
+/**
+ * Memformat alamat menjadi array baris dengan batas karakter per baris
+ * @param address - Alamat lengkap
+ * @param city - Nama kota
+ * @param postalCode - Kode pos
+ * @param maxLength - Batas karakter per baris (default: 45)
+ * @returns Array string yang sudah dipotong per baris
+ */
+const formatAddressLines = (
+  address: string,
+  city: string,
+  postalCode: string,
+  maxLength: number = 45
+): string[] => {
+  const fullAddress = `${address}${city ? `, ${city}` : ""}${postalCode ? `, ${postalCode}` : ""}`;
+  const lines: string[] = [];
+  let currentLine = "";
+
+  const words = fullAddress.split(" ");
+  for (const word of words) {
+    if ((currentLine + word).length > maxLength) {
+      if (currentLine) lines.push(currentLine.trim());
+      currentLine = word + " ";
+    } else {
+      currentLine += word + " ";
+    }
+  }
+  if (currentLine) lines.push(currentLine.trim());
+
+  return lines.slice(0, 4);
+};
+
+/**
+ * Memformat ringkasan produk dari array items
+ * @param items - Array item dengan qty dan name
+ * @param maxLength - Batas karakter (default: 50)
+ * @returns String ringkasan produk
+ */
+const formatProductSummary = (
+  items: Array<{ qty: number; name: string }>,
+  maxLength: number = 50
+): string => {
+  const summary = items.map((i) => `${i.qty}x ${i.name}`).join(", ");
+  return summary.substring(0, maxLength) || "-";
+};
+
+// =============================================================================
+// MAIN COMPONENT
+// =============================================================================
 
 export function PrintPreview({
   snapshot,
@@ -157,6 +224,9 @@ export function PrintPreview({
   chargeableWeight,
   volumetricWeight,
 }: PrintPreviewProps) {
+  // ---------------------------------------------------------------------------
+  // DESTRUCTURING SNAPSHOT
+  // ---------------------------------------------------------------------------
   const {
     storeName,
     storeAddress,
@@ -193,40 +263,51 @@ export function PrintPreview({
     dangerousGoods,
   } = snapshot;
 
-  // Format alamat untuk tampilan label
-  const formatAddressLines = (address: string, city: string, postalCode: string) => {
-    const fullAddress = `${address}${city ? `, ${city}` : ''}${postalCode ? `, ${postalCode}` : ''}`;
-    const maxLength = 45;
-    const lines: string[] = [];
-    let currentLine = "";
-    
-    const words = fullAddress.split(' ');
-    for (const word of words) {
-      if ((currentLine + word).length > maxLength) {
-        if (currentLine) lines.push(currentLine.trim());
-        currentLine = word + " ";
-      } else {
-        currentLine += word + " ";
-      }
-    }
-    if (currentLine) lines.push(currentLine.trim());
-    
-    return lines.slice(0, 4);
-  };
-
+  // ---------------------------------------------------------------------------
+  // COMPUTED VALUES
+  // ---------------------------------------------------------------------------
   const senderLines = formatAddressLines(storeAddress, storeCity, storePostalCode);
   const receiverLines = formatAddressLines(buyerAddress, buyerCity, buyerPostalCode);
-
-  // Nama produk gabungan
-  const productSummary = items.map(i => `${i.qty}x ${i.name}`).join(', ').substring(0, 50) || '-';
-
-  // Total yang ditampilkan (untuk COD)
+  const productSummary = formatProductSummary(items);
+  
   const codAmount = status === "COD" ? grandTotal : 0;
   const isCod = status === "COD";
-
-  // Cek apakah ada handling labels
   const hasHandlingLabels = fragile || temperatureControlled || dangerousGoods;
 
+  // ---------------------------------------------------------------------------
+  // RENDER HELPERS
+  // ---------------------------------------------------------------------------
+  
+  /**
+   * Render logo atau inisial toko
+   */
+  const renderLogo = (size: "small" | "large" = "small") => {
+    const sizeClasses = size === "small" ? "h-8 w-8" : "h-12 w-12 rounded-md object-cover";
+    
+    if (logoDataUrl) {
+      return (
+        <img
+          src={logoDataUrl}
+          alt="Logo"
+          className={sizeClasses}
+          crossOrigin="anonymous"
+        />
+      );
+    }
+    
+    return (
+      <div
+        className={`flex ${size === "small" ? "h-8 w-8" : "h-12 w-12"} items-center justify-center rounded text-xs font-bold text-white`}
+        style={{ backgroundColor: primaryColor }}
+      >
+        {storeName?.substring(0, 2).toUpperCase() || "UM"}
+      </div>
+    );
+  };
+
+  // ---------------------------------------------------------------------------
+  // MAIN RENDER
+  // ---------------------------------------------------------------------------
   return (
     <motion.section
       initial={{ opacity: 0, x: 20 }}
@@ -238,54 +319,43 @@ export function PrintPreview({
         id="print-area"
         className={`print-area bg-white ${
           printMode === "A4" || printMode === "AUTO"
-            ? isCargoShipment
-              ? "mx-auto max-w-[420px]"
-              : "mx-auto max-w-[420px]"
+            ? "mx-auto max-w-[420px]"
             : `mx-auto ${thermalWidthPx}`
         }`}
       >
-        {/* LABEL PENGIRIMAN - Format mirip JNE/KiriminAja */}
+        {/* =========================================================================
+            LABEL PENGIRIMAN - Format mirip JNE/KiriminAja
+            ========================================================================= */}
         <div className="border-2 border-black bg-white p-0 font-sans text-black">
           
-          {/* HEADER */}
+          {/* Header */}
           <div className="flex items-center justify-between border-b-2 border-black p-2">
             <div className="flex items-center gap-2">
-              {logoDataUrl ? (
-                <img 
-                  src={logoDataUrl} 
-                  alt="Logo" 
-                  className="h-8 w-8 object-contain"
-                  crossOrigin="anonymous"
-                />
-              ) : (
-                <div 
-                  className="flex h-8 w-8 items-center justify-center rounded text-xs font-bold text-white"
-                  style={{ backgroundColor: primaryColor }}
-                >
-                  {storeName?.substring(0, 2).toUpperCase() || 'UM'}
-                </div>
-              )}
+              {renderLogo("small")}
               <span className="text-xs font-bold">{storeName || "UMKM"}</span>
             </div>
             <div className="text-right">
-              <p className="text-sm font-black tracking-tight" style={{ color: primaryColor }}>
+              <p
+                className="text-sm font-black tracking-tight"
+                style={{ color: primaryColor }}
+              >
                 {courier}
               </p>
               <p className="text-[10px] font-semibold">{shippingService}</p>
             </div>
           </div>
 
-          {/* BARCODE */}
+          {/* Barcode Section */}
           <div className="border-b-2 border-black p-2 text-center">
             {showQr ? (
               <>
-                <Barcode 
-                  value={barcodePayload} 
-                  format="CODE128" 
-                  width={1.8} 
-                  height={50} 
-                  margin={0} 
-                  fontSize={12} 
+                <Barcode
+                  value={barcodePayload}
+                  format="CODE128"
+                  width={1.8}
+                  height={50}
+                  margin={0}
+                  fontSize={12}
                   background="#ffffff"
                   lineColor="#000000"
                 />
@@ -300,10 +370,12 @@ export function PrintPreview({
             )}
           </div>
 
-          {/* COD SECTION */}
+          {/* COD / LUNAS Section */}
           {isCod ? (
             <div className="border-b-2 border-black bg-black py-3 text-center text-white">
-              <p className="text-xs font-semibold uppercase tracking-wider">COD (Cash On Delivery)</p>
+              <p className="text-xs font-semibold uppercase tracking-wider">
+                COD (Cash On Delivery)
+              </p>
               <p className="text-2xl font-black tracking-tight">
                 {formatCurrency(codAmount)}
               </p>
@@ -314,67 +386,75 @@ export function PrintPreview({
             </div>
           )}
 
-          {/* INFO BARIS */}
+          {/* Info Baris - Asuransi & Berat */}
           <div className="grid grid-cols-2 border-b-2 border-black text-xs">
             <div className="border-r-2 border-black p-2">
-              <span className="font-semibold">Asuransi:</span> {formatCurrency(insuranceValue)}
+              <span className="font-semibold">Asuransi:</span>{" "}
+              {formatCurrency(insuranceValue)}
             </div>
             <div className="p-2 text-right">
               <span className="font-semibold">Berat:</span> {itemWeightGr} gr
             </div>
           </div>
 
-          {/* KODE & LAYANAN */}
+          {/* Kode & Layanan */}
           <div className="border-b-2 border-black p-2 text-center text-sm font-bold">
             {invoiceNo} | Layanan: {shippingService.substring(0, 3).toUpperCase()}
           </div>
 
-          {/* PRODUK */}
+          {/* Produk */}
           <div className="border-b-2 border-black p-2 text-xs">
             <span className="font-bold">Qty: {packageQty}</span> | {productSummary}
           </div>
 
-          {/* PENERIMA & PENGIRIM */}
+          {/* Penerima & Pengirim */}
           <div className="grid grid-cols-2 border-b-2 border-black text-xs">
+            {/* Penerima */}
             <div className="border-r-2 border-black p-2">
               <p className="mb-1 font-bold underline">Penerima:</p>
               <p className="font-bold">{buyerName || "-"}</p>
-              {receiverLines.map((line, i) => (
-                <p key={i} className="leading-tight">{line}</p>
+              {receiverLines.map((line, index) => (
+                <p key={index} className="leading-tight">
+                  {line}
+                </p>
               ))}
               <p className="mt-1 font-semibold">Telp: {buyerPhone || "-"}</p>
             </div>
+
+            {/* Pengirim */}
             <div className="p-2">
               <p className="mb-1 font-bold underline">Pengirim:</p>
               <p className="font-bold">{storeName || "-"}</p>
-              {senderLines.map((line, i) => (
-                <p key={i} className="leading-tight">{line}</p>
+              {senderLines.map((line, index) => (
+                <p key={index} className="leading-tight">
+                  {line}
+                </p>
               ))}
               <p className="mt-1 font-semibold">Telp: {storePhone || "-"}</p>
             </div>
           </div>
 
-          {/* CATATAN */}
+          {/* Catatan */}
           <div className="border-b-2 border-black p-2 text-xs">
             <p className="font-semibold">Catatan:</p>
             <p className="leading-tight">{packageNote || "-"}</p>
           </div>
 
-          {/* HANDLING STAMPS - DI DALAM KERTAS RESI */}
+          {/* Handling Stamps */}
           {hasHandlingLabels && (
-            <div className="border-b-2 border-black p-2 space-y-2">
+            <div className="border-b-2 border-black space-y-2 p-2">
               {fragile && <FragileStamp />}
               {temperatureControlled && <TemperatureStamp />}
               {dangerousGoods && <DangerousStamp />}
             </div>
           )}
 
-          {/* FOOTER DISCLAIMER */}
+          {/* Footer Disclaimer */}
           <div className="bg-gray-100 p-2 text-center text-[10px] italic">
             *Pengirim wajib meminta bukti serah terima paket ke kurir.
           </div>
 
-          {/* CARGO INFO */}
+          {/* Cargo Info */}
           {isCargoShipment && (
             <div className="border-t-2 border-dashed border-amber-500 bg-amber-50 p-2">
               <div className="flex items-center justify-between text-xs">
@@ -388,13 +468,13 @@ export function PrintPreview({
               </p>
               {cargoIdPayload && (
                 <div className="mt-1">
-                  <Barcode 
-                    value={cargoIdPayload} 
-                    format="CODE128" 
-                    width={1.2} 
-                    height={25} 
-                    margin={0} 
-                    fontSize={8} 
+                  <Barcode
+                    value={cargoIdPayload}
+                    format="CODE128"
+                    width={1.2}
+                    height={25}
+                    margin={0}
+                    fontSize={8}
                     background="#fffbeb"
                   />
                 </div>
@@ -403,15 +483,19 @@ export function PrintPreview({
           )}
         </div>
 
-        {/* INVOICE SECTION */}
+        {/* =========================================================================
+            INVOICE SECTION
+            ========================================================================= */}
         <div className="mt-4 border-2 border-slate-300 bg-white p-4">
+          {/* Header Invoice */}
           <div className="mb-4 flex items-start justify-between border-b border-slate-300 pb-4">
             <div className="flex items-start gap-3">
-              {logoDataUrl ? (
-                <img src={logoDataUrl} alt="Logo Toko" className="h-12 w-12 rounded-md object-cover" />
-              ) : null}
+              {logoDataUrl && renderLogo("large")}
               <div>
-                <p className="text-xl font-bold tracking-tight" style={{ color: primaryColor }}>
+                <p
+                  className="text-xl font-bold tracking-tight"
+                  style={{ color: primaryColor }}
+                >
                   {storeName || "Nama Toko"}
                 </p>
                 <p className="text-sm text-slate-600">{storeAddress || "Alamat toko"}</p>
@@ -423,15 +507,20 @@ export function PrintPreview({
               </div>
             </div>
             <div className="text-right">
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Invoice</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                Invoice
+              </p>
               <p className="font-semibold">{invoiceNo}</p>
               <p className="text-sm text-slate-600">{issueDate}</p>
             </div>
           </div>
 
+          {/* Info Pembeli & Pengiriman */}
           <div className="mb-4 grid gap-4 sm:grid-cols-2">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Pembeli</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                Pembeli
+              </p>
               <p className="font-semibold">{buyerName || "Nama pembeli"}</p>
               <p className="text-sm text-slate-600">{buyerAddress || "Alamat pembeli"}</p>
               <p className="text-sm text-slate-600">
@@ -441,15 +530,20 @@ export function PrintPreview({
               <p className="text-sm text-slate-600">{buyerPhone || "No HP pembeli"}</p>
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Detail Pengiriman</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                Detail Pengiriman
+              </p>
               <p className="text-sm">Kurir: {courier}</p>
               <p className="text-sm">Layanan: {shippingService}</p>
               <p className="text-sm">Tanggal: {shipDate || "-"}</p>
               <p className="text-sm">Resi: {receiptNo}</p>
-              <p className="text-sm">Status: <span className="font-semibold">{status}</span></p>
+              <p className="text-sm">
+                Status: <span className="font-semibold">{status}</span>
+              </p>
             </div>
           </div>
 
+          {/* Tabel Item */}
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr className="border-y border-slate-300 text-left">
@@ -465,12 +559,15 @@ export function PrintPreview({
                   <td className="py-2">{item.name || "-"}</td>
                   <td className="py-2 text-center">{item.qty}</td>
                   <td className="py-2 text-right">{formatCurrency(item.price)}</td>
-                  <td className="py-2 text-right">{formatCurrency(item.qty * item.price)}</td>
+                  <td className="py-2 text-right">
+                    {formatCurrency(item.qty * item.price)}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
 
+          {/* Ringkasan Harga */}
           <div className="mt-4 ml-auto w-full max-w-xs space-y-1 text-sm">
             <div className="flex justify-between">
               <span>Subtotal</span>
@@ -480,7 +577,9 @@ export function PrintPreview({
               <span>Ongkir</span>
               {isFreeShipping ? (
                 <span className="flex items-center gap-2">
-                  <span className="text-slate-400 line-through">{formatCurrency(shippingCost)}</span>
+                  <span className="text-slate-400 line-through">
+                    {formatCurrency(shippingCost)}
+                  </span>
                   <span className="font-semibold text-emerald-600">GRATIS</span>
                 </span>
               ) : (
@@ -495,20 +594,27 @@ export function PrintPreview({
             )}
             <div className="flex justify-between border-t border-slate-300 pt-2 text-base font-semibold">
               <span>Grand Total</span>
-              <span style={{ color: primaryColor }}>{formatCurrency(grandTotal)}</span>
+              <span style={{ color: primaryColor }}>
+                {formatCurrency(grandTotal)}
+              </span>
             </div>
           </div>
 
+          {/* Tanda Tangan */}
           <div className="mt-6 flex items-end justify-end">
             <div className="text-right">
-              <p className="text-xs uppercase tracking-[0.14em] text-slate-500">Penanggung Jawab</p>
-              <p className="mt-8 text-sm font-semibold" style={{ color: primaryColor }}>
+              <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
+                Penanggung Jawab
+              </p>
+              <p
+                className="mt-8 text-sm font-semibold"
+                style={{ color: primaryColor }}
+              >
                 {sellerSigner || "Pemilik"}
               </p>
             </div>
           </div>
         </div>
-
       </div>
     </motion.section>
   );
