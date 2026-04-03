@@ -5,9 +5,17 @@ export type OrderItem = {
   price: number;
 };
 
-export type PrintMode = "AUTO" | "A4" | "LABEL_100X150" | "LABEL_100X100" | "THERMAL_80" | "THERMAL_58";
+export type PrintMode =
+  | "AUTO"
+  | "A4"
+  | "A4_COMPACT"
+  | "LABEL_100X150"
+  | "LABEL_100X100"
+  | "THERMAL_80"
+  | "THERMAL_58";
 
 export type BrandingTemplate = "MONO" | "OCEAN" | "FOREST";
+export type ReceiptTemplate = "UMKM_CLASSIC" | "MARKETPLACE";
 
 export type CargoType = "REGULER" | "CARGO_KECIL" | "CARGO_SEDANG" | "CARGO_BESAR" | "CARGO_KHUSUS";
 
@@ -45,6 +53,7 @@ export type FormSnapshot = {
   showQr: boolean;
   printMode: PrintMode;
   brandingTemplate: BrandingTemplate;
+  receiptTemplate: ReceiptTemplate;
   primaryColor: string;
   cargoType: CargoType;
   dimensions: Dimensions;
@@ -60,17 +69,20 @@ export const TEMPLATE_COLOR: Record<BrandingTemplate, { label: string; color: st
   FOREST: { label: "Forest UMKM", color: "#166534" },
 };
 
+const RECEIPT_TEMPLATES: ReceiptTemplate[] = ["UMKM_CLASSIC", "MARKETPLACE"];
+
 const CARGO_TYPES: CargoType[] = ["REGULER", "CARGO_KECIL", "CARGO_SEDANG", "CARGO_BESAR", "CARGO_KHUSUS"];
-const PRINT_MODES: PrintMode[] = ["AUTO", "A4", "LABEL_100X150", "LABEL_100X100", "THERMAL_80", "THERMAL_58"];
+const PRINT_MODES: PrintMode[] = [
+  "AUTO",
+  "A4",
+  "A4_COMPACT",
+  "LABEL_100X150",
+  "LABEL_100X100",
+  "THERMAL_80",
+  "THERMAL_58",
+];
 
-// Counter untuk ID unik
-let idCounter = 0;
-const generateUniqueId = (): string => {
-  idCounter += 1;
-  return `${Date.now()}-${idCounter}-${Math.random().toString(36).slice(2, 5)}`;
-};
-
-export const createInvoiceNo = (): string => {
+export const createInvoiceNo = () => {
   const now = new Date();
   const y = now.getFullYear();
   const m = String(now.getMonth() + 1).padStart(2, "0");
@@ -79,15 +91,10 @@ export const createInvoiceNo = (): string => {
   return `INV-${y}${m}${d}-${rand}`;
 };
 
-export const createReceiptNo = (): string => {
+export const createReceiptNo = () => {
   const seed = Date.now().toString(36).toUpperCase();
   const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
   return `RSI${seed}${rand}`;
-};
-
-export const createCargoId = (invoiceNo: string): string => {
-  const rand = Math.random().toString(36).slice(2, 7).toUpperCase();
-  return `CGO-${invoiceNo}-${rand}`;
 };
 
 export const getDefaultSnapshot = (): FormSnapshot => ({
@@ -103,7 +110,7 @@ export const getDefaultSnapshot = (): FormSnapshot => ({
   buyerCity: "Surabaya",
   buyerPostalCode: "60111",
   buyerPhone: "0813-2222-1111",
-  items: [{ id: generateUniqueId(), name: "Produk UMKM", qty: 1, price: 50000 }],
+  items: [{ id: "1", name: "Produk UMKM", qty: 1, price: 50000 }],
   courier: "Kurir Toko",
   shippingService: "Reguler",
   shipDate: new Date().toISOString().slice(0, 10),
@@ -118,6 +125,7 @@ export const getDefaultSnapshot = (): FormSnapshot => ({
   showQr: true,
   printMode: "AUTO",
   brandingTemplate: "MONO",
+  receiptTemplate: "UMKM_CLASSIC",
   primaryColor: TEMPLATE_COLOR.MONO.color,
   cargoType: "REGULER",
   dimensions: {
@@ -131,100 +139,41 @@ export const getDefaultSnapshot = (): FormSnapshot => ({
   dangerousGoods: false,
 });
 
-/**
- * Deep clone dan normalize snapshot untuk menghindari reference issues
- */
-export const normalizeSnapshot = (input?: Partial<FormSnapshot> | null): FormSnapshot => {
+export const normalizeSnapshot = (input?: Partial<FormSnapshot>): FormSnapshot => {
   const defaults = getDefaultSnapshot();
-  
-  // Handle null/undefined input
-  if (!input) {
-    return defaults;
-  }
-
-  // Deep clone untuk menghindari mutation
-  const safeInput: Partial<FormSnapshot> = JSON.parse(JSON.stringify(input));
-  
-  // Merge dengan defaults
-  const merged = { 
-    ...defaults, 
-    ...safeInput,
-    // Pastikan nested objects di-clone properly
-    dimensions: safeInput.dimensions ? {
-      ...defaults.dimensions,
-      ...safeInput.dimensions,
-    } : defaults.dimensions,
-  };
-
-  // Validate dan normalize cargo type
-  const cargoType = CARGO_TYPES.includes(merged.cargoType as CargoType) 
-    ? (merged.cargoType as CargoType)
-    : defaults.cargoType;
-
-  // Validate dan normalize print mode
-  const printMode = PRINT_MODES.includes(merged.printMode as PrintMode)
-    ? (merged.printMode as PrintMode)
-    : defaults.printMode;
-
-  // Normalize items dengan ID yang valid
-  const items = Array.isArray(merged.items) && merged.items.length > 0 
-    ? merged.items.map((item, index) => ({
-        id: item.id || generateUniqueId(),
-        name: String(item.name || ""),
-        qty: Math.max(0, Number(item.qty) || 0),
-        price: Math.max(0, Number(item.price) || 0),
-      }))
-    : defaults.items;
+  const merged = { ...defaults, ...(input ?? {}) };
+  const items = Array.isArray(merged.items) && merged.items.length > 0 ? merged.items : defaults.items;
+  const dimensionsInput = merged.dimensions ?? defaults.dimensions;
+  const cargoType = CARGO_TYPES.includes(merged.cargoType) ? merged.cargoType : defaults.cargoType;
+  const printMode = PRINT_MODES.includes(merged.printMode) ? merged.printMode : defaults.printMode;
+  const receiptTemplate = RECEIPT_TEMPLATES.includes(merged.receiptTemplate)
+    ? merged.receiptTemplate
+    : defaults.receiptTemplate;
 
   return {
     ...merged,
-    storeName: String(merged.storeName || defaults.storeName),
-    storeAddress: String(merged.storeAddress || defaults.storeAddress),
-    storeCity: String(merged.storeCity || defaults.storeCity),
-    storePostalCode: String(merged.storePostalCode || defaults.storePostalCode),
-    storePhone: String(merged.storePhone || defaults.storePhone),
-    sellerSigner: String(merged.sellerSigner || defaults.sellerSigner),
-    logoDataUrl: String(merged.logoDataUrl || defaults.logoDataUrl),
-    buyerName: String(merged.buyerName || defaults.buyerName),
-    buyerAddress: String(merged.buyerAddress || defaults.buyerAddress),
-    buyerCity: String(merged.buyerCity || defaults.buyerCity),
-    buyerPostalCode: String(merged.buyerPostalCode || defaults.buyerPostalCode),
-    buyerPhone: String(merged.buyerPhone || defaults.buyerPhone),
-    courier: String(merged.courier || defaults.courier),
-    shippingService: String(merged.shippingService || defaults.shippingService),
-    shipDate: String(merged.shipDate || defaults.shipDate),
-    packageNote: String(merged.packageNote || defaults.packageNote),
-    status: String(merged.status || defaults.status),
-    receiptNo: String(merged.receiptNo || defaults.receiptNo),
-    invoiceNo: String(merged.invoiceNo || defaults.invoiceNo),
-    primaryColor: String(merged.primaryColor || defaults.primaryColor),
-    
-    // Numeric fields dengan validasi
-    packageQty: Math.max(1, Number(merged.packageQty) || 1),
-    itemWeightGr: Math.max(0, Number(merged.itemWeightGr) || 0),
-    shippingCost: Math.max(0, Number(merged.shippingCost) || 0),
-    insuranceValue: Math.max(0, Number(merged.insuranceValue) || 0),
-    
-    // Boolean fields
+    packageQty: Number(merged.packageQty) > 0 ? Number(merged.packageQty) : 1,
+    itemWeightGr: Number(merged.itemWeightGr) > 0 ? Number(merged.itemWeightGr) : 0,
+    shippingCost: Number(merged.shippingCost) > 0 ? Number(merged.shippingCost) : 0,
+    insuranceValue: Number(merged.insuranceValue) > 0 ? Number(merged.insuranceValue) : 0,
     isFreeShipping: Boolean(merged.isFreeShipping),
-    showQr: Boolean(merged.showQr),
     fragile: Boolean(merged.fragile),
     temperatureControlled: Boolean(merged.temperatureControlled),
     dangerousGoods: Boolean(merged.dangerousGoods),
-    
-    // Validated enums
     cargoType,
     printMode,
-    
-    // Normalized nested objects
+    receiptTemplate,
     dimensions: {
-      length: Math.max(0, Number(merged.dimensions.length) || 0),
-      width: Math.max(0, Number(merged.dimensions.width) || 0),
-      height: Math.max(0, Number(merged.dimensions.height) || 0),
+      length: Number(dimensionsInput.length) > 0 ? Number(dimensionsInput.length) : 0,
+      width: Number(dimensionsInput.width) > 0 ? Number(dimensionsInput.width) : 0,
+      height: Number(dimensionsInput.height) > 0 ? Number(dimensionsInput.height) : 0,
     },
-    
-    // Normalized array
-    items,
+    items: items.map((item, index) => ({
+      id: item.id || `${Date.now()}-${index}`,
+      name: item.name || "",
+      qty: Number(item.qty) > 0 ? Number(item.qty) : 0,
+      price: Number(item.price) > 0 ? Number(item.price) : 0,
+    })),
   };
 };
 

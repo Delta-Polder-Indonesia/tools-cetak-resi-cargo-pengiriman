@@ -44,6 +44,9 @@ type InputPanelProps = {
   onSaveToHistory: () => void;
   onPrint: () => void;
   onDownloadPdf: () => void;
+  onCheckSinglePageFit: () => void;
+  fitCheckMessage: string;
+  fitCheckStatus: "idle" | "ok" | "warn";
   onResetData: () => void;
   onExportCargoManifest: () => void;
   onClearHistory: () => void;
@@ -79,6 +82,9 @@ export function InputPanel({
   onSaveToHistory,
   onPrint,
   onDownloadPdf,
+  onCheckSinglePageFit,
+  fitCheckMessage,
+  fitCheckStatus,
   onResetData,
   onExportCargoManifest,
   onClearHistory,
@@ -112,6 +118,7 @@ export function InputPanel({
     showQr,
     printMode,
     brandingTemplate,
+    receiptTemplate,
     primaryColor,
     cargoType,
     dimensions,
@@ -295,10 +302,15 @@ export function InputPanel({
                 <option value="LABEL_100X150">Label 10 x 15 cm (Umum Pengiriman)</option>
                 <option value="LABEL_100X100">Label 10 x 10 cm</option>
                 <option value="A4">Kertas A4</option>
+                <option value="A4_COMPACT">A4 Full (Font Auto-Kecil)</option>
                 <option value="THERMAL_80">Mode Thermal 80mm</option>
                 <option value="THERMAL_58">Mode Thermal 58mm</option>
               </select>
             </div>
+            <select className="input-base" value={receiptTemplate} onChange={(e) => onFieldChange("receiptTemplate", e.target.value as FormSnapshot["receiptTemplate"])}>
+              <option value="UMKM_CLASSIC">Template Resi: UMKM Classic</option>
+              <option value="MARKETPLACE">Template Resi: Marketplace (Shopee/Tokopedia Style)</option>
+            </select>
             <label className="flex items-center gap-2 text-sm text-slate-700">
               <input type="checkbox" checked={showQr} onChange={(e) => onFieldChange("showQr", e.target.checked)} />
               Tampilkan Barcode resi
@@ -391,10 +403,24 @@ export function InputPanel({
         <button onClick={onDownloadPdf} disabled={isExporting} className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:opacity-60" type="button">
           {isExporting ? "Memproses PDF..." : "Download PDF"}
         </button>
+        <button onClick={onCheckSinglePageFit} className="rounded-lg border border-indigo-300 bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-100" type="button">
+          Cek Muat 1 Lembar
+        </button>
         <button onClick={onResetData} className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100" type="button">
           Reset Data
         </button>
       </div>
+      {fitCheckStatus !== "idle" ? (
+        <div
+          className={`rounded-lg border px-3 py-2 text-sm ${
+            fitCheckStatus === "ok"
+              ? "border-emerald-300 bg-emerald-50 text-emerald-800"
+              : "border-rose-300 bg-rose-50 text-rose-800"
+          }`}
+        >
+          {fitCheckMessage}
+        </div>
+      ) : null}
 
       <div className="space-y-3 border-t border-slate-200 pt-4">
         <div className="flex items-center justify-between gap-3">

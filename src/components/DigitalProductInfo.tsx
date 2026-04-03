@@ -1,65 +1,27 @@
 export function DigitalProductInfo() {
   return (
     <div className="no-print rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
-      <h3 className="text-base font-semibold text-slate-800">Cara Pakai ResiCraft</h3>
-      
-      <div className="mt-4 space-y-4">
-        <div className="flex gap-3">
-          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-600">1</div>
-          <div>
-            <p className="text-sm font-medium text-slate-800">Isi Data Toko & Pembeli</p>
-            <p className="text-xs text-slate-600 mt-0.5">
-              Masukin nama toko, alamat, nomor HP di bagian atas. Terus scroll ke bawah buat isi data pembeli (nama, alamat lengkap, kota, kode pos).
-            </p>
-          </div>
-        </div>
-
-        <div className="flex gap-3">
-          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-600">2</div>
-          <div>
-            <p className="text-sm font-medium text-slate-800">Tambah Produk</p>
-            <p className="text-xs text-slate-600 mt-0.5">
-              Klik "Tambah Item", masukin nama barang, qty, dan harga. Bisa tambah beberapa item sekaligus. Total otomatis kehitung.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex gap-3">
-          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-600">3</div>
-          <div>
-            <p className="text-sm font-medium text-slate-800">Pilih Kurir & Layanan</p>
-            <p className="text-xs text-slate-600 mt-0.5">
-              Pilih kurir (JNE, J&T, SiCepat, dll) dan jenis layanan (REG, OKE, YES). Ongkir diisi manual sesuai yang ditampilin aplikasi marketplace.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex gap-3">
-          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-600">4</div>
-          <div>
-            <p className="text-sm font-medium text-slate-800">Atur Format Cetak</p>
-            <p className="text-xs text-slate-600 mt-0.5">
-              Pilih mau cetak A4 (buat invoice lengkap) atau Thermal 80mm/58mm (buat label tempel paket). Preview langsung muncul di sebelah kanan.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex gap-3">
-          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-600">5</div>
-          <div>
-            <p className="text-sm font-medium text-slate-800">Cetak atau Simpan PDF</p>
-            <p className="text-xs text-slate-600 mt-0.5">
-              Klik tombol "Cetak" buat print langsung, atau "Simpan PDF" buat export file. Nomor resi sama barcode otomatis ke-generate.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-4 rounded-lg bg-slate-50 p-3">
-        <p className="text-xs text-slate-600">
-          <span className="font-semibold">Tips:</span> Semua data tersimpan otomatis di browser, jadi kalo refresh halaman gak ilang. Bisa dipakai offline juga kok.
-        </p>
-      </div>
+      <h3 className="text-base font-semibold">Output Produk Digital (untuk Lynk)</h3>
+      <p className="mt-3 text-sm text-slate-700">
+        <span className="font-semibold">Nama produk:</span> ResiCraft UMKM - Generator Invoice + Shipping Label Offline
+      </p>
+      <p className="mt-2 text-sm text-slate-700">
+        <span className="font-semibold">Deskripsi jualan:</span> Aplikasi web praktis untuk UMKM membuat invoice profesional dan label
+        pengiriman siap cetak tanpa backend. Bisa dipakai offline, mobile friendly, auto hitung total, auto nomor resi, barcode
+        resi, layanan kirim, data kota/kode pos, dan ekspor PDF dalam beberapa klik.
+      </p>
+      <p className="mt-2 text-sm text-slate-700">
+        <span className="font-semibold">Target market:</span> UMKM, dropshipper, reseller, online shop rumahan, admin toko marketplace.
+      </p>
+      <p className="mt-2 text-sm text-slate-700">
+        <span className="font-semibold">Keunggulan:</span> Offline-ready, data langsung tampil real-time, tampilan invoice/resi bersih,
+        format cetak A4 dan thermal, dukungan berat barang, jumlah koli, gratis ongkir (harga dicoret), mudah dipakai dari HP maupun
+        laptop.
+      </p>
+      <p className="mt-2 text-sm text-slate-700">
+        <span className="font-semibold">Ide harga jual:</span> Rp49.000 (personal), Rp99.000 (bisnis 3 device), Rp149.000 (bundle +
+        template branding).
+      </p>
     </div>
   );
 }

@@ -4,10 +4,6 @@ import type { FormSnapshot } from "../models/formSnapshot";
 import { formatCurrency } from "../utils/format";
 import { formatWeight } from "../utils/weight";
 
-// =============================================================================
-// TYPES
-// =============================================================================
-
 type PrintPreviewProps = {
   snapshot: FormSnapshot;
   issueDate: string;
@@ -23,19 +19,11 @@ type PrintPreviewProps = {
   volumetricWeight: number;
 };
 
-// =============================================================================
-// SUB-COMPONENTS: Handling Stamps
-// =============================================================================
-
 const FragileStamp = () => (
   <div className="relative overflow-hidden border-2 border-red-600 bg-red-600 text-white">
     <div className="flex">
       <div className="flex w-1/3 flex-col items-center justify-center border-r-2 border-white p-3">
-        <svg
-          viewBox="0 0 100 140"
-          className="h-20 w-16 fill-white"
-          xmlns="http://www.w3.org/2000/svg"
-        >
+        <svg viewBox="0 0 100 140" className="h-20 w-16 fill-white" xmlns="http://www.w3.org/2000/svg">
           <path d="M30 20 L30 60 Q30 80 50 90 L50 120 L35 120 L35 130 L65 130 L65 120 L50 120 L50 90 Q70 80 70 60 L70 20 Z" />
           <path d="M50 25 L45 40 L55 50 L48 65" stroke="red" strokeWidth="3" fill="none" />
           <path d="M48 65 L52 75 L45 85" stroke="red" strokeWidth="2" fill="none" />
@@ -95,7 +83,7 @@ const TemperatureStamp = () => (
   <div className="relative overflow-hidden border-2 border-blue-600 bg-blue-600 text-white">
     <div className="flex">
       <div className="flex w-1/3 flex-col items-center justify-center border-r-2 border-white p-3">
-        <span className="text-4xl">❄️</span>
+        <p className="text-3xl font-black">COLD</p>
         <p className="mt-2 text-center text-xs font-black">KEEP COOL</p>
       </div>
       <div className="w-2/3 p-3">
@@ -105,7 +93,7 @@ const TemperatureStamp = () => (
         </div>
         <div className="mt-2 border-t border-white pt-2 text-center">
           <p className="text-xs">Jangan dibekukan / Do not freeze</p>
-          <p className="text-xs">Suhu: 2°C - 8°C</p>
+          <p className="text-xs">Suhu: 2C - 8C</p>
         </div>
       </div>
     </div>
@@ -116,7 +104,7 @@ const DangerousStamp = () => (
   <div className="relative overflow-hidden border-2 border-red-800 bg-red-800 text-white">
     <div className="flex">
       <div className="flex w-1/3 flex-col items-center justify-center border-r-2 border-white p-3">
-        <span className="text-4xl">☠️</span>
+        <p className="text-3xl font-black">HAZ</p>
         <p className="mt-2 text-center text-xs font-black">DANGEROUS</p>
       </div>
       <div className="w-2/3 p-3">
@@ -133,16 +121,7 @@ const DangerousStamp = () => (
   </div>
 );
 
-// =============================================================================
-// UTILITY FUNCTIONS
-// =============================================================================
-
-const formatAddressLines = (
-  address: string,
-  city: string,
-  postalCode: string,
-  maxLength: number = 45
-): string[] => {
+const formatAddressLines = (address: string, city: string, postalCode: string, maxLength: number = 45): string[] => {
   const fullAddress = `${address}${city ? `, ${city}` : ""}${postalCode ? `, ${postalCode}` : ""}`;
   const lines: string[] = [];
   let currentLine = "";
@@ -150,28 +129,26 @@ const formatAddressLines = (
   const words = fullAddress.split(" ");
   for (const word of words) {
     if ((currentLine + word).length > maxLength) {
-      if (currentLine) lines.push(currentLine.trim());
-      currentLine = word + " ";
+      if (currentLine) {
+        lines.push(currentLine.trim());
+      }
+      currentLine = `${word} `;
     } else {
-      currentLine += word + " ";
+      currentLine += `${word} `;
     }
   }
-  if (currentLine) lines.push(currentLine.trim());
+
+  if (currentLine) {
+    lines.push(currentLine.trim());
+  }
 
   return lines.slice(0, 4);
 };
 
-const formatProductSummary = (
-  items: Array<{ qty: number; name: string }>,
-  maxLength: number = 50
-): string => {
-  const summary = items.map((i) => `${i.qty}x ${i.name}`).join(", ");
+const formatProductSummary = (items: Array<{ qty: number; name: string }>, maxLength: number = 50): string => {
+  const summary = items.map((item) => `${item.qty}x ${item.name}`).join(", ");
   return summary.substring(0, maxLength) || "-";
 };
-
-// =============================================================================
-// MAIN COMPONENT
-// =============================================================================
 
 export function PrintPreview({
   snapshot,
@@ -214,6 +191,7 @@ export function PrintPreview({
     invoiceNo,
     showQr,
     printMode,
+    receiptTemplate,
     primaryColor,
     cargoType,
     dimensions,
@@ -226,25 +204,65 @@ export function PrintPreview({
   const senderLines = formatAddressLines(storeAddress, storeCity, storePostalCode);
   const receiverLines = formatAddressLines(buyerAddress, buyerCity, buyerPostalCode);
   const productSummary = formatProductSummary(items);
-  
-  const codAmount = status === "COD" ? grandTotal : 0;
   const isCod = status === "COD";
+  const codAmount = isCod ? grandTotal : 0;
   const hasHandlingLabels = fragile || temperatureControlled || dangerousGoods;
+  const isA4Layout = printMode === "A4" || printMode === "A4_COMPACT" || printMode === "AUTO";
+  const isCompactA4 = printMode === "A4_COMPACT";
+  const isSquareLabel = printMode === "LABEL_100X100";
+  const isMarketplaceTemplate = receiptTemplate === "MARKETPLACE";
+  const useMarketplaceMmLayout = isMarketplaceTemplate && !isThermalMode;
+  const rowHeights = useMarketplaceMmLayout
+    ? {
+        header: "min-h-[12mm]",
+        barcode: "min-h-[22mm]",
+        payment: "min-h-[14mm]",
+        invoice: "min-h-[7mm]",
+        insurance: "min-h-[8mm]",
+        qty: "min-h-[7mm]",
+        priceTable: "min-h-[24mm]",
+        address: "min-h-[50mm]",
+        note: "min-h-[10mm]",
+        shipInfo: "min-h-[8mm]",
+        total: "min-h-[16mm]",
+        legal: "min-h-[7mm]",
+      }
+    : {
+        header: "min-h-[14mm]",
+        barcode: "min-h-[24mm]",
+        payment: "min-h-[13mm]",
+        invoice: "min-h-[8mm]",
+        insurance: "min-h-[8mm]",
+        qty: "min-h-[8mm]",
+        priceTable: "min-h-[24mm]",
+        address: "min-h-[42mm]",
+        note: "min-h-[10mm]",
+        shipInfo: "min-h-[8mm]",
+        total: "min-h-[13mm]",
+        legal: "min-h-[7mm]",
+      };
+  const receiptSizeStyle = isThermalMode
+    ? undefined
+    : isA4Layout
+      ? {
+          width: "100%",
+          minHeight: "277mm",
+        }
+      : {
+          width: "100mm",
+          minHeight: isSquareLabel ? "100mm" : "150mm",
+        };
+  const sectionPad = isThermalMode ? "p-1.5" : isCompactA4 ? "p-2" : isA4Layout ? "p-3" : "p-2";
+  const serviceCode = (shippingService || "REG").slice(0, 3).toUpperCase();
+  const totalQty = items.reduce((sum, item) => sum + item.qty, 0);
 
   const renderLogo = (size: "small" | "large" = "small") => {
     const sizeClasses = size === "small" ? "h-8 w-8" : "h-12 w-12 rounded-md object-cover";
-    
+
     if (logoDataUrl) {
-      return (
-        <img
-          src={logoDataUrl}
-          alt="Logo"
-          className={sizeClasses}
-          crossOrigin="anonymous"
-        />
-      );
+      return <img src={logoDataUrl} alt="Logo" className={sizeClasses} crossOrigin="anonymous" />;
     }
-    
+
     return (
       <div
         className={`flex ${size === "small" ? "h-8 w-8" : "h-12 w-12"} items-center justify-center rounded text-xs font-bold text-white`}
@@ -260,110 +278,123 @@ export function PrintPreview({
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.45, delay: 0.15 }}
-      className="space-y-4 w-full max-w-full"
+      className="w-full max-w-full space-y-4"
     >
       <div
         id="print-area"
-        className={`print-area bg-white break-words ${
-          printMode === "A4" || printMode === "AUTO"
-            ? "mx-auto max-w-[420px]"
-            : `mx-auto ${thermalWidthPx}`
-        }`}
+        className={`print-area break-words bg-white ${isCompactA4 ? "a4-compact" : ""} ${isA4Layout ? "mx-auto w-full max-w-[794px]" : printMode === "LABEL_100X150" || printMode === "LABEL_100X100" ? "mx-auto max-w-[420px]" : `mx-auto ${thermalWidthPx}`}`}
       >
-        <div className="border-2 border-black bg-white p-0 font-sans text-black">
-          
-          <div className="flex items-center justify-between border-b-2 border-black p-2">
+        <div
+          className={`border-2 border-black bg-white p-0 font-sans text-black ${isThermalMode ? "text-[10px]" : "text-xs"} ${isMarketplaceTemplate ? "receipt-marketplace" : ""}`}
+          style={receiptSizeStyle}
+        >
+          <div className={`flex ${rowHeights.header} items-center justify-between border-b-2 border-black ${sectionPad}`}>
             <div className="flex items-center gap-2">
               {renderLogo("small")}
               <span className="text-xs font-bold">{storeName || "UMKM"}</span>
             </div>
             <div className="text-right">
-              <p
-                className="text-sm font-black tracking-tight"
-                style={{ color: primaryColor }}
-              >
+              <p className="text-sm font-black tracking-tight" style={{ color: primaryColor }}>
                 {courier}
               </p>
               <p className="text-[10px] font-semibold">{shippingService}</p>
             </div>
           </div>
 
-          <div className="border-b-2 border-black p-2 text-center">
+          <div className={`${rowHeights.barcode} border-b-2 border-black ${sectionPad} text-center`}>
             {showQr ? (
               <>
                 <div className="flex w-full justify-center overflow-hidden">
                   <Barcode
                     value={barcodePayload}
                     format="CODE128"
-                    width={1.5}
-                    height={50}
+                    width={isThermalMode ? 1 : isMarketplaceTemplate ? 1.45 : 1.35}
+                    height={isThermalMode ? 40 : isMarketplaceTemplate ? 55 : 52}
                     margin={0}
                     fontSize={12}
                     background="#ffffff"
                     lineColor="#000000"
                   />
                 </div>
-                <p className="mt-1 text-center text-sm font-bold tracking-wider">
-                  RESI : {receiptNo}
-                </p>
+                <p className="mt-1 text-center text-sm font-bold tracking-wider">RESI : {receiptNo}</p>
               </>
             ) : (
-              <p className="py-2 text-center text-sm font-bold">
-                NO. RESI: {receiptNo}
-              </p>
+              <p className="py-2 text-center text-sm font-bold">NO. RESI: {receiptNo}</p>
             )}
           </div>
 
           {isCod ? (
-            <div className="border-b-2 border-black bg-black py-3 text-center text-white">
-              <p className="text-xs font-semibold uppercase tracking-wider">
-                COD (Cash On Delivery)
-              </p>
-              <p className="text-2xl font-black tracking-tight">
-                {formatCurrency(codAmount)}
-              </p>
+            <div className={`${rowHeights.payment} border-b-2 border-black bg-black py-2 text-center text-white`}>
+              <p className="text-xs font-semibold uppercase tracking-wider">COD (Cash On Delivery)</p>
+              <p className="text-2xl font-black tracking-tight">{formatCurrency(codAmount)}</p>
             </div>
           ) : (
-            <div className="border-b-2 border-black py-2 text-center">
+            <div className={`${rowHeights.payment} border-b-2 border-black py-2 text-center`}>
               <p className="text-lg font-black text-emerald-600">LUNAS</p>
             </div>
           )}
 
-          <div className="grid grid-cols-2 border-b-2 border-black text-xs">
-            <div className="border-r-2 border-black p-2">
-              <span className="font-semibold">Asuransi:</span>{" "}
-              {formatCurrency(insuranceValue)}
+          <div className={`${rowHeights.invoice} border-b-2 border-black ${sectionPad} text-center text-sm font-bold`}>
+            {invoiceNo} | Layanan: {serviceCode}
+          </div>
+
+          <div className={`grid ${rowHeights.insurance} grid-cols-2 border-b-2 border-black text-xs`}>
+            <div className={`border-r-2 border-black ${sectionPad}`}>
+              <span className="font-semibold">Asuransi:</span> {formatCurrency(insuranceValue)}
             </div>
-            <div className="p-2 text-right">
+            <div className={`${sectionPad} text-right`}>
               <span className="font-semibold">Berat:</span> {itemWeightGr} gr
             </div>
           </div>
 
-          <div className="border-b-2 border-black p-2 text-center text-sm font-bold">
-            {invoiceNo} | Layanan: {shippingService.substring(0, 3).toUpperCase()}
-          </div>
-
-          <div className="border-b-2 border-black p-2 text-xs">
+          <div className={`${rowHeights.qty} border-b-2 border-black ${sectionPad} text-xs`}>
             <span className="font-bold">Qty: {packageQty}</span> | {productSummary}
           </div>
 
-          <div className="grid grid-cols-2 border-b-2 border-black text-xs">
-            <div className="border-r-2 border-black p-2">
+          <div className={`${rowHeights.priceTable} border-b-2 border-black ${sectionPad}`}>
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide">Detail Harga Produk</p>
+            <div className={`overflow-hidden ${isMarketplaceTemplate ? "border border-slate-300" : "border-y border-slate-300"}`}>
+              <table className={`w-full border-collapse ${isMarketplaceTemplate ? "marketplace-price-table text-[11px]" : "text-[11px]"}`}>
+                <thead>
+                  <tr className={`text-left ${isMarketplaceTemplate ? "bg-slate-50" : ""}`}>
+                    <th className="border-b border-slate-300 px-2 py-1 font-bold">Produk</th>
+                    <th className="border-b border-slate-300 px-2 py-1 text-center font-bold">Qty</th>
+                    <th className="border-b border-slate-300 px-2 py-1 text-right font-bold">Harga</th>
+                    <th className="border-b border-slate-300 px-2 py-1 text-right font-bold">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.map((item, index) => (
+                    <tr key={`price-${item.id}`} className={isMarketplaceTemplate ? "odd:bg-white even:bg-slate-50/40" : ""}>
+                      <td className="border-b border-slate-200 px-2 py-1">{item.name || `Produk ${index + 1}`}</td>
+                      <td className="border-b border-slate-200 px-2 py-1 text-center">{item.qty}</td>
+                      <td className="border-b border-slate-200 px-2 py-1 text-right">{formatCurrency(item.price)}</td>
+                      <td className="border-b border-slate-200 px-2 py-1 text-right">{formatCurrency(item.qty * item.price)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="mt-1 text-[10px] text-slate-600">Total item: {totalQty} pcs</p>
+          </div>
+
+          <div className={`grid ${rowHeights.address} grid-cols-2 border-b-2 border-black text-xs`}>
+            <div className={`border-r-2 border-black ${sectionPad}`}>
               <p className="mb-1 font-bold underline">Penerima:</p>
               <p className="font-bold">{buyerName || "-"}</p>
               {receiverLines.map((line, index) => (
-                <p key={index} className="leading-tight">
+                <p key={`recv-${index}`} className="leading-tight">
                   {line}
                 </p>
               ))}
               <p className="mt-1 font-semibold">Telp: {buyerPhone || "-"}</p>
             </div>
 
-            <div className="p-2">
+            <div className={sectionPad}>
               <p className="mb-1 font-bold underline">Pengirim:</p>
               <p className="font-bold">{storeName || "-"}</p>
               {senderLines.map((line, index) => (
-                <p key={index} className="leading-tight">
+                <p key={`send-${index}`} className="leading-tight">
                   {line}
                 </p>
               ))}
@@ -371,35 +402,33 @@ export function PrintPreview({
             </div>
           </div>
 
-          <div className="border-b-2 border-black p-2 text-xs">
+          <div className={`${rowHeights.note} border-b-2 border-black ${sectionPad} text-xs`}>
             <p className="font-semibold">Catatan:</p>
             <p className="leading-tight">{packageNote || "-"}</p>
           </div>
 
-          {hasHandlingLabels && (
-            <div className="border-b-2 border-black space-y-2 p-2">
-              {fragile && <FragileStamp />}
-              {temperatureControlled && <TemperatureStamp />}
-              {dangerousGoods && <DangerousStamp />}
+          {hasHandlingLabels ? (
+            <div className={`space-y-2 border-b-2 border-black ${sectionPad}`}>
+              {fragile ? <FragileStamp /> : null}
+              {temperatureControlled ? <TemperatureStamp /> : null}
+              {dangerousGoods ? <DangerousStamp /> : null}
             </div>
-          )}
+          ) : null}
 
-          <div className="bg-gray-100 p-2 text-center text-[10px] italic">
-            *Pengirim wajib meminta bukti serah terima paket ke kurir.
-          </div>
-
-          {isCargoShipment && (
-            <div className="border-t-2 border-dashed border-amber-500 bg-amber-50 p-2">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-bold text-amber-800">{cargoType}</span>
-                <span className="font-bold text-amber-800">
-                  {formatWeight(chargeableWeight)}
-                </span>
+          {isCargoShipment ? (
+            <div className={`border-b-2 border-dashed border-amber-500 bg-amber-50 ${sectionPad} text-xs ${isThermalMode ? "text-[10px]" : ""}`}>
+              <div className="mb-1 flex items-center gap-2">
+                <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-[10px] font-bold text-white">!</span>
+                <p className="font-bold text-amber-800">CARGO LABEL</p>
               </div>
-              <p className="text-[10px] text-amber-700">
-                Dimensi: {dimensions.length}x{dimensions.width}x{dimensions.height} cm
-              </p>
-              {cargoIdPayload && (
+              <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-amber-900">
+                <p>Jenis Cargo: <span className="font-semibold">{cargoType}</span></p>
+                <p>Berat Tertagih: <span className="font-semibold">{formatWeight(chargeableWeight)}</span></p>
+                <p>Dimensi: <span className="font-semibold">{dimensions.length}x{dimensions.width}x{dimensions.height} cm</span></p>
+                <p>Status: <span className="font-semibold">{status}</span></p>
+              </div>
+              <p className="mt-1 text-[10px] text-amber-700">Volumetrik: {formatWeight(volumetricWeight)}</p>
+              {cargoIdPayload ? (
                 <div className="mt-1 flex w-full justify-center overflow-hidden">
                   <Barcode
                     value={cargoIdPayload}
@@ -411,135 +440,53 @@ export function PrintPreview({
                     background="#fffbeb"
                   />
                 </div>
-              )}
+              ) : null}
             </div>
-          )}
-        </div>
+          ) : null}
 
-        <div className="mt-4 border-2 border-slate-300 bg-white p-4">
-          <div className="mb-4 flex items-start justify-between border-b border-slate-300 pb-4">
-            <div className="flex items-start gap-3">
-              {logoDataUrl && renderLogo("large")}
-              <div>
-                <p
-                  className="text-xl font-bold tracking-tight"
-                  style={{ color: primaryColor }}
-                >
-                  {storeName || "Nama Toko"}
-                </p>
-                <p className="text-sm text-slate-600">{storeAddress || "Alamat toko"}</p>
-                <p className="text-sm text-slate-600">
-                  {storeCity || "Kota asal"}
-                  {storePostalCode ? `, ${storePostalCode}` : ""}
-                </p>
-                <p className="text-sm text-slate-600">{storePhone || "No HP toko"}</p>
+          <div className={`${rowHeights.shipInfo} border-b-2 border-black ${sectionPad} text-[10px]`}>
+            <div className="flex items-center justify-between">
+              <p>Tanggal: {shipDate || issueDate}</p>
+              <p>Status: {status}</p>
+            </div>
+            <div className="mt-1 flex items-center justify-between">
+              <p>Koli: {packageQty}</p>
+              <p>Penanggung Jawab: {sellerSigner || "Pemilik"}</p>
+            </div>
+          </div>
+
+          <div className={`${rowHeights.total} border-b-2 border-black ${sectionPad} text-[11px]`}>
+            <div className={`ml-auto w-full ${isMarketplaceTemplate ? "max-w-[360px]" : "max-w-[320px]"} space-y-1`}>
+              <div className="flex items-center justify-between border-b border-slate-200 pb-1">
+                <span>Subtotal</span>
+                <span>{formatCurrency(subtotal)}</span>
               </div>
-            </div>
-            <div className="text-right">
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
-                Invoice
-              </p>
-              <p className="font-semibold">{invoiceNo}</p>
-              <p className="text-sm text-slate-600">{issueDate}</p>
-            </div>
-          </div>
-
-          <div className="mb-4 grid gap-4 sm:grid-cols-2">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
-                Pembeli
-              </p>
-              <p className="font-semibold">{buyerName || "Nama pembeli"}</p>
-              <p className="text-sm text-slate-600">{buyerAddress || "Alamat pembeli"}</p>
-              <p className="text-sm text-slate-600">
-                {buyerCity || "Kota tujuan"}
-                {buyerPostalCode ? `, ${buyerPostalCode}` : ""}
-              </p>
-              <p className="text-sm text-slate-600">{buyerPhone || "No HP pembeli"}</p>
-            </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
-                Detail Pengiriman
-              </p>
-              <p className="text-sm">Kurir: {courier}</p>
-              <p className="text-sm">Layanan: {shippingService}</p>
-              <p className="text-sm">Tanggal: {shipDate || "-"}</p>
-              <p className="text-sm">Resi: {receiptNo}</p>
-              <p className="text-sm">
-                Status: <span className="font-semibold">{status}</span>
-              </p>
-            </div>
-          </div>
-
-          <div className="w-full overflow-x-auto">
-            <table className="w-full min-w-[350px] border-collapse text-sm">
-              <thead>
-                <tr className="border-y border-slate-300 text-left">
-                  <th className="py-2">Produk</th>
-                  <th className="py-2 text-center">Qty</th>
-                  <th className="py-2 text-right">Harga</th>
-                  <th className="py-2 text-right">Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.map((item) => (
-                  <tr key={item.id} className="border-b border-slate-200">
-                    <td className="py-2">{item.name || "-"}</td>
-                    <td className="py-2 text-center">{item.qty}</td>
-                    <td className="py-2 text-right">{formatCurrency(item.price)}</td>
-                    <td className="py-2 text-right">
-                      {formatCurrency(item.qty * item.price)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="mt-4 ml-auto w-full max-w-xs space-y-1 text-sm">
-            <div className="flex justify-between">
-              <span>Subtotal</span>
-              <span>{formatCurrency(subtotal)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Ongkir</span>
-              {isFreeShipping ? (
-                <span className="flex items-center gap-2">
-                  <span className="text-slate-400 line-through">
-                    {formatCurrency(shippingCost)}
+              <div className="flex items-center justify-between border-b border-slate-200 pb-1">
+                <span>Ongkir</span>
+                {isFreeShipping ? (
+                  <span className="flex items-center gap-2">
+                    <span className="text-slate-400 line-through">{formatCurrency(shippingCost)}</span>
+                    <span className="font-semibold text-emerald-600">GRATIS</span>
                   </span>
-                  <span className="font-semibold text-emerald-600">GRATIS</span>
-                </span>
-              ) : (
-                <span>{formatCurrency(shippingCost)}</span>
-              )}
-            </div>
-            {isCargoShipment && cargoHandlingFee > 0 && (
-              <div className="flex justify-between">
-                <span>Biaya Handling Cargo</span>
-                <span>{formatCurrency(cargoHandlingFee)}</span>
+                ) : (
+                  <span>{formatCurrency(shippingCost)}</span>
+                )}
               </div>
-            )}
-            <div className="flex justify-between border-t border-slate-300 pt-2 text-base font-semibold">
-              <span>Grand Total</span>
-              <span style={{ color: primaryColor }}>
-                {formatCurrency(grandTotal)}
-              </span>
+              {isCargoShipment && cargoHandlingFee > 0 ? (
+                <div className="flex items-center justify-between border-b border-slate-200 pb-1">
+                  <span>Handling Cargo</span>
+                  <span>{formatCurrency(cargoHandlingFee)}</span>
+                </div>
+              ) : null}
+              <div className={`flex items-center justify-between pt-1 leading-tight ${isMarketplaceTemplate ? "text-2xl" : "text-xl"} font-bold`}>
+                <span className="text-slate-900">Grand Total</span>
+                <span className="text-blue-700">{formatCurrency(grandTotal)}</span>
+              </div>
             </div>
           </div>
 
-          <div className="mt-6 flex items-end justify-end">
-            <div className="text-right">
-              <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-                Penanggung Jawab
-              </p>
-              <p
-                className="mt-8 text-sm font-semibold"
-                style={{ color: primaryColor }}
-              >
-                {sellerSigner || "Pemilik"}
-              </p>
-            </div>
+          <div className={`${rowHeights.legal} bg-gray-100 p-2 text-center text-[10px] italic`}>
+            *Pengirim wajib meminta bukti serah terima paket ke kurir.
           </div>
         </div>
       </div>

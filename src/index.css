@@ -6,9 +6,53 @@
   }
 }
 
-@layer base {
-  html, body {
-    @apply overflow-x-hidden;
+@media screen {
+  .print-sheet {
+    overflow: hidden;
+    border: 1px solid rgb(226 232 240);
+    background: white;
+  }
+
+  .print-sheet .print-area {
+    --preview-scale-safe: var(--preview-scale, 1);
+    transform: scale(var(--preview-scale-safe));
+    transform-origin: top left;
+    width: calc(100% / var(--preview-scale-safe));
+  }
+
+  .a4-compact {
+    font-size: 0.9em;
+  }
+
+  .a4-compact p,
+  .a4-compact td,
+  .a4-compact th,
+  .a4-compact span,
+  .a4-compact div {
+    line-height: 1.2;
+  }
+
+  .receipt-marketplace {
+    letter-spacing: 0.01em;
+  }
+
+  .receipt-marketplace p,
+  .receipt-marketplace td,
+  .receipt-marketplace th,
+  .receipt-marketplace span,
+  .receipt-marketplace div {
+    line-height: 1.22;
+  }
+
+  .receipt-marketplace .marketplace-price-table th {
+    background: rgb(248 250 252);
+    font-weight: 700;
+  }
+
+  .receipt-marketplace .marketplace-price-table td,
+  .receipt-marketplace .marketplace-price-table th {
+    padding-top: 0.15rem;
+    padding-bottom: 0.15rem;
   }
 }
 
@@ -28,11 +72,28 @@
     zoom: var(--print-scale, 1);
     break-inside: avoid-page;
     page-break-inside: avoid;
+    transform: none !important;
+    width: auto !important;
+  }
+
+  .print-sheet {
+    border: none !important;
+    min-height: auto !important;
+    width: auto !important;
+    overflow: visible !important;
   }
 
   .print-area * {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+  }
+
+  .a4-compact {
+    font-size: 0.88em !important;
+  }
+
+  .receipt-marketplace {
+    font-size: 0.98em !important;
   }
 
   .page-break {
