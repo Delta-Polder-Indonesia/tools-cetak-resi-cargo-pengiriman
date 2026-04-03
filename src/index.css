@@ -19,10 +19,18 @@
     max-width: none !important;
     margin: 0 !important;
     box-shadow: none !important;
+    zoom: var(--print-scale, 1);
+    break-inside: avoid-page;
+    page-break-inside: avoid;
   }
 
   .print-area * {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+  }
+
+  .page-break {
+    break-before: page;
+    page-break-before: always;
   }
 }
