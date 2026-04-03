@@ -471,58 +471,94 @@ export default function App() {
         </div>
       </motion.header>
 
-      <div className="mx-auto grid w-full max-w-7xl gap-5 px-4 py-5 sm:px-6 lg:grid-cols-[1.03fr_1fr] lg:px-8">
-        <InputPanel
-          snapshot={snapshot}
-          activeStep={activeStep}
-          setActiveStep={setActiveStep}
-          isCargoShipment={isCargoShipment}
-          volumetricWeight={volumetricWeight}
-          chargeableWeight={chargeableWeight}
-          stepItems={STEP_ITEMS}
-          isExporting={isExporting}
-          historyQuery={historyQuery}
-          setHistoryQuery={setHistoryQuery}
-          historyStatus={historyStatus}
-          setHistoryStatus={setHistoryStatus}
-          historyCargoType={historyCargoType}
-          setHistoryCargoType={setHistoryCargoType}
-          filteredHistory={filteredHistory}
-          cargoTypeLabels={CARGO_TYPE_LABELS}
-          onFieldChange={updateField}
-          onItemChange={updateItem}
-          onDimensionChange={updateDimension}
-          onAddItem={addItem}
-          onRemoveItem={removeItem}
-          onApplyTemplate={applyTemplate}
-          onLogoUpload={handleLogoUpload}
-          onSaveToHistory={saveToHistory}
-          onPrint={() => handlePrint()}
-          onDownloadPdf={() => handleDownloadPdf()}
-          onResetData={resetData}
-          onExportCargoManifest={exportCargoManifest}
-          onClearHistory={clearHistory}
-          onLoadFromHistory={loadFromHistory}
-          onRunAfterLoad={runAfterLoad}
-          onDeleteHistoryItem={deleteHistoryItem}
-        />
-
-        <div className="space-y-4">
-          <PrintPreview
+      {/* 
+        ============================================================================
+        LAYOUT UTAMA - SUDAH DIPERBAIKI
+        ============================================================================
+        Perubahan: Dari lg:grid-cols-[1.03fr_1fr] (hampir 50:50)
+        Menjadi: xl:grid-cols-12 dengan proporsi 5:7 (42% : 58%)
+        
+        Ini membuat:
+        - Input panel lebih lebar dan nyaman (tidak cramped)
+        - Preview tetap proporsional tanpa melebar berlebihan
+      */}
+      <div className="mx-auto grid w-full max-w-7xl gap-5 px-4 py-5 sm:px-6 lg:px-8 xl:grid-cols-12">
+        
+        {/* 
+          LEFT COLUMN: Input Panel 
+          xl:col-span-5 = 5/12 kolom (~42% lebar layar)
+          Lebih lebar dari sebelumnya untuk form yang lebih nyaman
+        */}
+        <div className="xl:col-span-5">
+          <InputPanel
             snapshot={snapshot}
-            issueDate={issueDate}
-            thermalWidthPx={thermalWidthPx}
+            activeStep={activeStep}
+            setActiveStep={setActiveStep}
             isCargoShipment={isCargoShipment}
-            isThermalMode={isThermalMode}
-            barcodePayload={barcodePayload}
-            cargoIdPayload={cargoIdPayload}
-            subtotal={subtotal}
-            cargoHandlingFee={cargoHandlingFee}
-            grandTotal={grandTotal}
-            chargeableWeight={chargeableWeight}
             volumetricWeight={volumetricWeight}
+            chargeableWeight={chargeableWeight}
+            stepItems={STEP_ITEMS}
+            isExporting={isExporting}
+            historyQuery={historyQuery}
+            setHistoryQuery={setHistoryQuery}
+            historyStatus={historyStatus}
+            setHistoryStatus={setHistoryStatus}
+            historyCargoType={historyCargoType}
+            setHistoryCargoType={setHistoryCargoType}
+            filteredHistory={filteredHistory}
+            cargoTypeLabels={CARGO_TYPE_LABELS}
+            onFieldChange={updateField}
+            onItemChange={updateItem}
+            onDimensionChange={updateDimension}
+            onAddItem={addItem}
+            onRemoveItem={removeItem}
+            onApplyTemplate={applyTemplate}
+            onLogoUpload={handleLogoUpload}
+            onSaveToHistory={saveToHistory}
+            onPrint={() => handlePrint()}
+            onDownloadPdf={() => handleDownloadPdf()}
+            onResetData={resetData}
+            onExportCargoManifest={exportCargoManifest}
+            onClearHistory={clearHistory}
+            onLoadFromHistory={loadFromHistory}
+            onRunAfterLoad={runAfterLoad}
+            onDeleteHistoryItem={deleteHistoryItem}
           />
-          <DigitalProductInfo />
+          
+          {/* DigitalProductInfo - hanya tampil di desktop (xl) */}
+          <div className="mt-5 hidden xl:block">
+            <DigitalProductInfo />
+          </div>
+        </div>
+
+        {/* 
+          RIGHT COLUMN: Print Preview 
+          xl:col-span-7 = 7/12 kolom (~58% lebar layar)
+          Cukup untuk preview resi tanpa terlalu melebar
+        */}
+        <div className="xl:col-span-7">
+          {/* Sticky container agar preview mengikuti saat scroll */}
+          <div className="sticky top-5 space-y-4">
+            <PrintPreview
+              snapshot={snapshot}
+              issueDate={issueDate}
+              thermalWidthPx={thermalWidthPx}
+              isCargoShipment={isCargoShipment}
+              isThermalMode={isThermalMode}
+              barcodePayload={barcodePayload}
+              cargoIdPayload={cargoIdPayload}
+              subtotal={subtotal}
+              cargoHandlingFee={cargoHandlingFee}
+              grandTotal={grandTotal}
+              chargeableWeight={chargeableWeight}
+              volumetricWeight={volumetricWeight}
+            />
+            
+            {/* DigitalProductInfo - tampil di mobile/tablet saja */}
+            <div className="xl:hidden">
+              <DigitalProductInfo />
+            </div>
+          </div>
         </div>
       </div>
     </main>
