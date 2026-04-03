@@ -6,6 +6,12 @@
   }
 }
 
+@layer base {
+  html, body {
+    @apply overflow-x-hidden;
+  }
+}
+
 @media print {
   .no-print {
     display: none !important;

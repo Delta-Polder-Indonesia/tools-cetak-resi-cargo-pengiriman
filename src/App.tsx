@@ -438,8 +438,8 @@ export default function App() {
         transition={{ duration: 0.45 }}
         className="no-print border-b border-slate-200 bg-white"
       >
-        {/* Header full width tanpa max-w-7xl */}
-        <div className="flex w-full flex-col gap-2 px-4 py-4 sm:px-6 lg:px-8">
+        {/* Menggunakan max-w-7xl agar layout tidak melebar secara tak terbatas */}
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-2 px-4 py-4 sm:px-6 lg:px-8">
           <h1 className="text-xl font-bold tracking-tight">UMKM Resi & Invoice Builder</h1>
           <p className="text-sm text-slate-600">
             Pencatatan penjualan dan pembuatan label pengiriman internal. Bukan untuk pemalsuan resi resmi ekspedisi.
@@ -449,22 +449,19 @@ export default function App() {
 
       {/* 
         ============================================================================
-        LAYOUT UTAMA - FULL LAYAR TANPA BATASAN MAX-WIDTH
+        LAYOUT UTAMA - TERKONTROL DENGAN MAX-WIDTH
         ============================================================================
-        - Hapus mx-auto dan max-w-7xl agar konten mengisi seluruh lebar layar
-        - Gunakan flexbox dengan proporsi fixed untuk input dan flexible untuk preview
-        - Input: fixed width 520px (tidak melebar)
-        - Preview: mengisi sisa ruang (flex-1) dengan max-width terkontrol
+        - Menggunakan mx-auto dan max-w-7xl agar layout terlihat rapi di layar besar
+        - Input Panel di sisi kiri berukuran tetap
+        - Preview di sisi kanan menyesuaikan
       */}
-      <div className="flex w-full flex-col gap-5 px-4 py-5 sm:px-6 lg:px-8 xl:flex-row">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 py-5 sm:px-6 lg:px-8 lg:flex-row">
         
         {/* 
           LEFT COLUMN: Input Panel 
-          - xl:w-[520px]: Fixed width 520px di desktop (tidak melebar)
-          - xl:flex-shrink-0: Mencegah input mengecil
-          - w-full: Full width di mobile/tablet
+          - lg:w-[480px] xl:w-[520px]: Ukuran terkontrol
         */}
-        <div className="w-full xl:w-[520px] xl:flex-shrink-0">
+        <div className="w-full shrink-0 lg:w-[480px] xl:w-[520px]">
           <InputPanel
             snapshot={snapshot}
             activeStep={activeStep}
@@ -501,16 +498,14 @@ export default function App() {
           />
           
           {/* DigitalProductInfo - desktop only */}
-          <div className="mt-5 hidden xl:block">
+          <div className="mt-5 hidden lg:block">
             <DigitalProductInfo />
           </div>
         </div>
 
         {/* 
           RIGHT COLUMN: Print Preview 
-          - flex-1: Mengisi seluruh sisa ruang yang tersedia
-          - min-w-0: Mencegah overflow issues dengan flexbox
-          - max-w-none: Hapus batasan lebar agar preview bisa melebar sesuai ruang
+          - flex-1: Mengisi sisa ruang
         */}
         <div className="min-w-0 flex-1">
           <div className="sticky top-5 space-y-4">
@@ -530,7 +525,7 @@ export default function App() {
             />
             
             {/* DigitalProductInfo - mobile/tablet only */}
-            <div className="xl:hidden">
+            <div className="lg:hidden">
               <DigitalProductInfo />
             </div>
           </div>
