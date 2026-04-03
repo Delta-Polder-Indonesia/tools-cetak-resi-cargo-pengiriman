@@ -15,7 +15,12 @@ export type PrintMode =
   | "THERMAL_58";
 
 export type BrandingTemplate = "MONO" | "OCEAN" | "FOREST";
-export type ReceiptTemplate = "UMKM_CLASSIC" | "MARKETPLACE";
+export type ReceiptTemplate =
+  | "UMKM_CLASSIC"
+  | "JNE_LIKE"
+  | "SHOPEE_LIKE"
+  | "TOKOPEDIA_LIKE"
+  | "MARKETPLACE";
 
 export type CargoType = "REGULER" | "CARGO_KECIL" | "CARGO_SEDANG" | "CARGO_BESAR" | "CARGO_KHUSUS";
 
@@ -69,7 +74,13 @@ export const TEMPLATE_COLOR: Record<BrandingTemplate, { label: string; color: st
   FOREST: { label: "Forest UMKM", color: "#166534" },
 };
 
-const RECEIPT_TEMPLATES: ReceiptTemplate[] = ["UMKM_CLASSIC", "MARKETPLACE"];
+const RECEIPT_TEMPLATES: ReceiptTemplate[] = [
+  "UMKM_CLASSIC",
+  "JNE_LIKE",
+  "SHOPEE_LIKE",
+  "TOKOPEDIA_LIKE",
+  "MARKETPLACE",
+];
 
 const CARGO_TYPES: CargoType[] = ["REGULER", "CARGO_KECIL", "CARGO_SEDANG", "CARGO_BESAR", "CARGO_KHUSUS"];
 const PRINT_MODES: PrintMode[] = [
@@ -146,9 +157,10 @@ export const normalizeSnapshot = (input?: Partial<FormSnapshot>): FormSnapshot =
   const dimensionsInput = merged.dimensions ?? defaults.dimensions;
   const cargoType = CARGO_TYPES.includes(merged.cargoType) ? merged.cargoType : defaults.cargoType;
   const printMode = PRINT_MODES.includes(merged.printMode) ? merged.printMode : defaults.printMode;
-  const receiptTemplate = RECEIPT_TEMPLATES.includes(merged.receiptTemplate)
+  const rawReceiptTemplate = RECEIPT_TEMPLATES.includes(merged.receiptTemplate)
     ? merged.receiptTemplate
     : defaults.receiptTemplate;
+  const receiptTemplate = rawReceiptTemplate === "MARKETPLACE" ? "SHOPEE_LIKE" : rawReceiptTemplate;
 
   return {
     ...merged,

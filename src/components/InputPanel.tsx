@@ -309,7 +309,9 @@ export function InputPanel({
             </div>
             <select className="input-base" value={receiptTemplate} onChange={(e) => onFieldChange("receiptTemplate", e.target.value as FormSnapshot["receiptTemplate"])}>
               <option value="UMKM_CLASSIC">Template Resi: UMKM Classic</option>
-              <option value="MARKETPLACE">Template Resi: Marketplace (Shopee/Tokopedia Style)</option>
+              <option value="JNE_LIKE">Template Resi: JNE-like (Tebal/Kontras)</option>
+              <option value="SHOPEE_LIKE">Template Resi: Shopee-like (Soft)</option>
+              <option value="TOKOPEDIA_LIKE">Template Resi: Tokopedia-like (Compact)</option>
             </select>
             <label className="flex items-center gap-2 text-sm text-slate-700">
               <input type="checkbox" checked={showQr} onChange={(e) => onFieldChange("showQr", e.target.checked)} />

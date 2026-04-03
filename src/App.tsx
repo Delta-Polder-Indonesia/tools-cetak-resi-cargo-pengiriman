@@ -390,8 +390,6 @@ export default function App() {
     setHistory([]);
   };
 
-  const issueDate = new Date().toLocaleDateString("id-ID");
-
   return (
     <main className="min-h-screen bg-slate-100 text-slate-900">
       <motion.header
@@ -450,7 +448,6 @@ export default function App() {
         <div className="space-y-4">
           <PrintPreview
             snapshot={snapshot}
-            issueDate={issueDate}
             thermalWidthPx={thermalWidthPx}
             isCargoShipment={isCargoShipment}
             isThermalMode={isThermalMode}

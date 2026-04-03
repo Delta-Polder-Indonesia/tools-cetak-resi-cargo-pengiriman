@@ -32,25 +32,54 @@
     line-height: 1.2;
   }
 
-  .receipt-marketplace {
+  .receipt-jne {
+    letter-spacing: 0.012em;
+    font-weight: 600;
+  }
+
+  .receipt-jne p,
+  .receipt-jne td,
+  .receipt-jne th,
+  .receipt-jne span,
+  .receipt-jne div {
+    line-height: 1.18;
+  }
+
+  .receipt-shopee {
     letter-spacing: 0.01em;
   }
 
-  .receipt-marketplace p,
-  .receipt-marketplace td,
-  .receipt-marketplace th,
-  .receipt-marketplace span,
-  .receipt-marketplace div {
+  .receipt-shopee p,
+  .receipt-shopee td,
+  .receipt-shopee th,
+  .receipt-shopee span,
+  .receipt-shopee div {
     line-height: 1.22;
   }
 
-  .receipt-marketplace .marketplace-price-table th {
+  .receipt-tokopedia {
+    letter-spacing: 0.008em;
+    font-size: 0.96em;
+  }
+
+  .receipt-tokopedia p,
+  .receipt-tokopedia td,
+  .receipt-tokopedia th,
+  .receipt-tokopedia span,
+  .receipt-tokopedia div {
+    line-height: 1.16;
+  }
+
+  .receipt-shopee .marketplace-price-table th,
+  .receipt-tokopedia .marketplace-price-table th {
     background: rgb(248 250 252);
     font-weight: 700;
   }
 
-  .receipt-marketplace .marketplace-price-table td,
-  .receipt-marketplace .marketplace-price-table th {
+  .receipt-shopee .marketplace-price-table td,
+  .receipt-shopee .marketplace-price-table th,
+  .receipt-tokopedia .marketplace-price-table td,
+  .receipt-tokopedia .marketplace-price-table th {
     padding-top: 0.15rem;
     padding-bottom: 0.15rem;
   }
@@ -92,8 +121,16 @@
     font-size: 0.88em !important;
   }
 
-  .receipt-marketplace {
+  .receipt-jne {
+    font-size: 1em !important;
+  }
+
+  .receipt-shopee {
     font-size: 0.98em !important;
+  }
+
+  .receipt-tokopedia {
+    font-size: 0.95em !important;
   }
 
   .page-break {

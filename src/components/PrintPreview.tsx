@@ -6,7 +6,6 @@ import { formatWeight } from "../utils/weight";
 
 type PrintPreviewProps = {
   snapshot: FormSnapshot;
-  issueDate: string;
   thermalWidthPx: string;
   isCargoShipment: boolean;
   isThermalMode: boolean;
@@ -145,14 +144,8 @@ const formatAddressLines = (address: string, city: string, postalCode: string, m
   return lines.slice(0, 4);
 };
 
-const formatProductSummary = (items: Array<{ qty: number; name: string }>, maxLength: number = 50): string => {
-  const summary = items.map((item) => `${item.qty}x ${item.name}`).join(", ");
-  return summary.substring(0, maxLength) || "-";
-};
-
 export function PrintPreview({
   snapshot,
-  issueDate,
   thermalWidthPx,
   isCargoShipment,
   isThermalMode,
@@ -170,7 +163,6 @@ export function PrintPreview({
     storeCity,
     storePostalCode,
     storePhone,
-    sellerSigner,
     logoDataUrl,
     buyerName,
     buyerAddress,
@@ -180,8 +172,6 @@ export function PrintPreview({
     items,
     courier,
     shippingService,
-    shipDate,
-    packageQty,
     packageNote,
     status,
     itemWeightGr,
@@ -203,44 +193,62 @@ export function PrintPreview({
 
   const senderLines = formatAddressLines(storeAddress, storeCity, storePostalCode);
   const receiverLines = formatAddressLines(buyerAddress, buyerCity, buyerPostalCode);
-  const productSummary = formatProductSummary(items);
   const isCod = status === "COD";
   const codAmount = isCod ? grandTotal : 0;
   const hasHandlingLabels = fragile || temperatureControlled || dangerousGoods;
   const isA4Layout = printMode === "A4" || printMode === "A4_COMPACT" || printMode === "AUTO";
   const isCompactA4 = printMode === "A4_COMPACT";
   const isSquareLabel = printMode === "LABEL_100X100";
-  const isMarketplaceTemplate = receiptTemplate === "MARKETPLACE";
-  const useMarketplaceMmLayout = isMarketplaceTemplate && !isThermalMode;
-  const rowHeights = useMarketplaceMmLayout
+  const normalizedTemplate = receiptTemplate === "MARKETPLACE" ? "SHOPEE_LIKE" : receiptTemplate;
+  const isJneLikeTemplate = normalizedTemplate === "JNE_LIKE";
+  const isShopeeLikeTemplate = normalizedTemplate === "SHOPEE_LIKE";
+  const isTokopediaLikeTemplate = normalizedTemplate === "TOKOPEDIA_LIKE";
+  const useCompactTemplateLayout = !isThermalMode && (isShopeeLikeTemplate || isTokopediaLikeTemplate);
+
+  const rowHeights = isJneLikeTemplate
     ? {
-        header: "min-h-[12mm]",
-        barcode: "min-h-[22mm]",
-        payment: "min-h-[14mm]",
-        invoice: "min-h-[7mm]",
-        insurance: "min-h-[8mm]",
-        qty: "min-h-[7mm]",
-        priceTable: "min-h-[24mm]",
-        address: "min-h-[50mm]",
-        note: "min-h-[10mm]",
-        shipInfo: "min-h-[8mm]",
-        total: "min-h-[16mm]",
-        legal: "min-h-[7mm]",
-      }
-    : {
-        header: "min-h-[14mm]",
+        header: "min-h-[13mm]",
         barcode: "min-h-[24mm]",
-        payment: "min-h-[13mm]",
+        payment: "min-h-[15mm]",
         invoice: "min-h-[8mm]",
         insurance: "min-h-[8mm]",
-        qty: "min-h-[8mm]",
-        priceTable: "min-h-[24mm]",
-        address: "min-h-[42mm]",
+        qty: "min-h-[7mm]",
+        priceTable: "min-h-[23mm]",
+        address: "min-h-[47mm]",
         note: "min-h-[10mm]",
         shipInfo: "min-h-[8mm]",
-        total: "min-h-[13mm]",
+        total: "min-h-[15mm]",
         legal: "min-h-[7mm]",
-      };
+      }
+    : useCompactTemplateLayout
+      ? {
+          header: "min-h-[12mm]",
+          barcode: "min-h-[22mm]",
+          payment: "min-h-[13mm]",
+          invoice: "min-h-[7mm]",
+          insurance: "min-h-[8mm]",
+          qty: "min-h-[7mm]",
+          priceTable: "min-h-[22mm]",
+          address: "min-h-[44mm]",
+          note: "min-h-[9mm]",
+          shipInfo: "min-h-[8mm]",
+          total: "min-h-[15mm]",
+          legal: "min-h-[7mm]",
+        }
+      : {
+          header: "min-h-[14mm]",
+          barcode: "min-h-[24mm]",
+          payment: "min-h-[13mm]",
+          invoice: "min-h-[8mm]",
+          insurance: "min-h-[8mm]",
+          qty: "min-h-[8mm]",
+          priceTable: "min-h-[24mm]",
+          address: "min-h-[42mm]",
+          note: "min-h-[10mm]",
+          shipInfo: "min-h-[8mm]",
+          total: "min-h-[13mm]",
+          legal: "min-h-[7mm]",
+        };
   const receiptSizeStyle = isThermalMode
     ? undefined
     : isA4Layout
@@ -252,9 +260,22 @@ export function PrintPreview({
           width: "100mm",
           minHeight: isSquareLabel ? "100mm" : "150mm",
         };
-  const sectionPad = isThermalMode ? "p-1.5" : isCompactA4 ? "p-2" : isA4Layout ? "p-3" : "p-2";
+  const sectionPad = isThermalMode
+    ? "p-1.5"
+    : isCompactA4 || isTokopediaLikeTemplate
+      ? "p-2"
+      : isA4Layout
+        ? "p-3"
+        : "p-2";
   const serviceCode = (shippingService || "REG").slice(0, 3).toUpperCase();
   const totalQty = items.reduce((sum, item) => sum + item.qty, 0);
+  const templateClassName = isJneLikeTemplate
+    ? "receipt-jne"
+    : isShopeeLikeTemplate
+      ? "receipt-shopee"
+      : isTokopediaLikeTemplate
+        ? "receipt-tokopedia"
+        : "";
 
   const renderLogo = (size: "small" | "large" = "small") => {
     const sizeClasses = size === "small" ? "h-8 w-8" : "h-12 w-12 rounded-md object-cover";
@@ -285,7 +306,7 @@ export function PrintPreview({
         className={`print-area break-words bg-white ${isCompactA4 ? "a4-compact" : ""} ${isA4Layout ? "mx-auto w-full max-w-[794px]" : printMode === "LABEL_100X150" || printMode === "LABEL_100X100" ? "mx-auto max-w-[420px]" : `mx-auto ${thermalWidthPx}`}`}
       >
         <div
-          className={`border-2 border-black bg-white p-0 font-sans text-black ${isThermalMode ? "text-[10px]" : "text-xs"} ${isMarketplaceTemplate ? "receipt-marketplace" : ""}`}
+          className={`border-2 border-black bg-white p-0 font-sans text-black ${isThermalMode ? "text-[10px]" : "text-xs"} ${templateClassName}`}
           style={receiptSizeStyle}
         >
           <div className={`flex ${rowHeights.header} items-center justify-between border-b-2 border-black ${sectionPad}`}>
@@ -308,8 +329,8 @@ export function PrintPreview({
                   <Barcode
                     value={barcodePayload}
                     format="CODE128"
-                    width={isThermalMode ? 1 : isMarketplaceTemplate ? 1.45 : 1.35}
-                    height={isThermalMode ? 40 : isMarketplaceTemplate ? 55 : 52}
+                     width={isThermalMode ? 1 : isJneLikeTemplate ? 1.55 : isShopeeLikeTemplate ? 1.4 : 1.3}
+                     height={isThermalMode ? 40 : isJneLikeTemplate ? 58 : isShopeeLikeTemplate ? 54 : 50}
                     margin={0}
                     fontSize={12}
                     background="#ffffff"
@@ -345,37 +366,6 @@ export function PrintPreview({
             <div className={`${sectionPad} text-right`}>
               <span className="font-semibold">Berat:</span> {itemWeightGr} gr
             </div>
-          </div>
-
-          <div className={`${rowHeights.qty} border-b-2 border-black ${sectionPad} text-xs`}>
-            <span className="font-bold">Qty: {packageQty}</span> | {productSummary}
-          </div>
-
-          <div className={`${rowHeights.priceTable} border-b-2 border-black ${sectionPad}`}>
-            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide">Detail Harga Produk</p>
-            <div className={`overflow-hidden ${isMarketplaceTemplate ? "border border-slate-300" : "border-y border-slate-300"}`}>
-              <table className={`w-full border-collapse ${isMarketplaceTemplate ? "marketplace-price-table text-[11px]" : "text-[11px]"}`}>
-                <thead>
-                  <tr className={`text-left ${isMarketplaceTemplate ? "bg-slate-50" : ""}`}>
-                    <th className="border-b border-slate-300 px-2 py-1 font-bold">Produk</th>
-                    <th className="border-b border-slate-300 px-2 py-1 text-center font-bold">Qty</th>
-                    <th className="border-b border-slate-300 px-2 py-1 text-right font-bold">Harga</th>
-                    <th className="border-b border-slate-300 px-2 py-1 text-right font-bold">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {items.map((item, index) => (
-                    <tr key={`price-${item.id}`} className={isMarketplaceTemplate ? "odd:bg-white even:bg-slate-50/40" : ""}>
-                      <td className="border-b border-slate-200 px-2 py-1">{item.name || `Produk ${index + 1}`}</td>
-                      <td className="border-b border-slate-200 px-2 py-1 text-center">{item.qty}</td>
-                      <td className="border-b border-slate-200 px-2 py-1 text-right">{formatCurrency(item.price)}</td>
-                      <td className="border-b border-slate-200 px-2 py-1 text-right">{formatCurrency(item.qty * item.price)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <p className="mt-1 text-[10px] text-slate-600">Total item: {totalQty} pcs</p>
           </div>
 
           <div className={`grid ${rowHeights.address} grid-cols-2 border-b-2 border-black text-xs`}>
@@ -444,45 +434,58 @@ export function PrintPreview({
             </div>
           ) : null}
 
-          <div className={`${rowHeights.shipInfo} border-b-2 border-black ${sectionPad} text-[10px]`}>
-            <div className="flex items-center justify-between">
-              <p>Tanggal: {shipDate || issueDate}</p>
-              <p>Status: {status}</p>
+          <div className={`${rowHeights.priceTable} border-b-2 border-black ${sectionPad}`}>
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide">Detail Harga Produk</p>
+            <div className={`overflow-hidden ${isShopeeLikeTemplate || isTokopediaLikeTemplate ? "border border-slate-300" : "border-y border-slate-300"}`}>
+              <table className={`w-full border-collapse ${isShopeeLikeTemplate || isTokopediaLikeTemplate ? "marketplace-price-table text-[11px]" : "text-[11px]"}`}>
+                <thead>
+                  <tr className={`text-left ${isShopeeLikeTemplate || isTokopediaLikeTemplate ? "bg-slate-50" : ""}`}>
+                    <th className="border-b border-slate-300 px-2 py-1 font-bold">Produk</th>
+                    <th className="border-b border-slate-300 px-2 py-1 text-center font-bold">Qty</th>
+                    <th className="border-b border-slate-300 px-2 py-1 text-right font-bold">Harga</th>
+                    <th className="border-b border-slate-300 px-2 py-1 text-right font-bold">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.map((item, index) => (
+                    <tr key={`price-${item.id}`} className={isShopeeLikeTemplate || isTokopediaLikeTemplate ? "odd:bg-white even:bg-slate-50/40" : ""}>
+                      <td className="border-b border-slate-200 px-2 py-1">{item.name || `Produk ${index + 1}`}</td>
+                      <td className="border-b border-slate-200 px-2 py-1 text-center">{item.qty}</td>
+                      <td className="border-b border-slate-200 px-2 py-1 text-right">{formatCurrency(item.price)}</td>
+                      <td className="border-b border-slate-200 px-2 py-1 text-right">{formatCurrency(item.qty * item.price)}</td>
+                    </tr>
+                  ))}
+                  <tr>
+                    <td className="border-b border-slate-200 px-2 py-1 font-medium" colSpan={3}>Subtotal</td>
+                    <td className="border-b border-slate-200 px-2 py-1 text-right font-medium">{formatCurrency(subtotal)}</td>
+                  </tr>
+                  <tr>
+                    <td className="border-b border-slate-200 px-2 py-1 font-medium" colSpan={3}>Ongkir</td>
+                    <td className="border-b border-slate-200 px-2 py-1 text-right">
+                      {isFreeShipping ? (
+                        <div className="flex flex-col items-end leading-tight">
+                          <span className="text-slate-400 line-through">{formatCurrency(shippingCost)}</span>
+                          <span className="font-semibold text-emerald-600">GRATIS</span>
+                        </div>
+                      ) : (
+                        <span className="font-medium">{formatCurrency(shippingCost)}</span>
+                      )}
+                    </td>
+                  </tr>
+                  {isCargoShipment && cargoHandlingFee > 0 ? (
+                    <tr>
+                      <td className="border-b border-slate-200 px-2 py-1 font-medium" colSpan={3}>Handling Cargo</td>
+                      <td className="border-b border-slate-200 px-2 py-1 text-right font-medium">{formatCurrency(cargoHandlingFee)}</td>
+                    </tr>
+                  ) : null}
+                  <tr>
+                    <td className="px-2 py-2 text-base font-bold text-slate-900" colSpan={3}>Grand Total</td>
+                    <td className="px-2 py-2 text-right text-lg font-bold text-blue-700">{formatCurrency(grandTotal)}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-            <div className="mt-1 flex items-center justify-between">
-              <p>Koli: {packageQty}</p>
-              <p>Penanggung Jawab: {sellerSigner || "Pemilik"}</p>
-            </div>
-          </div>
-
-          <div className={`${rowHeights.total} border-b-2 border-black ${sectionPad} text-[11px]`}>
-            <div className={`ml-auto w-full ${isMarketplaceTemplate ? "max-w-[360px]" : "max-w-[320px]"} space-y-1`}>
-              <div className="flex items-center justify-between border-b border-slate-200 pb-1">
-                <span>Subtotal</span>
-                <span>{formatCurrency(subtotal)}</span>
-              </div>
-              <div className="flex items-center justify-between border-b border-slate-200 pb-1">
-                <span>Ongkir</span>
-                {isFreeShipping ? (
-                  <span className="flex items-center gap-2">
-                    <span className="text-slate-400 line-through">{formatCurrency(shippingCost)}</span>
-                    <span className="font-semibold text-emerald-600">GRATIS</span>
-                  </span>
-                ) : (
-                  <span>{formatCurrency(shippingCost)}</span>
-                )}
-              </div>
-              {isCargoShipment && cargoHandlingFee > 0 ? (
-                <div className="flex items-center justify-between border-b border-slate-200 pb-1">
-                  <span>Handling Cargo</span>
-                  <span>{formatCurrency(cargoHandlingFee)}</span>
-                </div>
-              ) : null}
-              <div className={`flex items-center justify-between pt-1 leading-tight ${isMarketplaceTemplate ? "text-2xl" : "text-xl"} font-bold`}>
-                <span className="text-slate-900">Grand Total</span>
-                <span className="text-blue-700">{formatCurrency(grandTotal)}</span>
-              </div>
-            </div>
+            <p className="mt-1 text-[10px] text-slate-600">Total item: {totalQty} pcs</p>
           </div>
 
           <div className={`${rowHeights.legal} bg-gray-100 p-2 text-center text-[10px] italic`}>
